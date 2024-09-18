@@ -4,13 +4,13 @@ const path = require('path');
 const router = express.Router();
 const congvanController = require('../controllers/congvan.controller');
 
-// Thiết lập multer
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // Đường dẫn lưu tệp
+    cb(null, 'uploads/');
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname)); // Đặt tên tệp
+    // Thêm dấu thời gian trước tên gốc để tránh trùng lặp
+    cb(null, Date.now() + '-' + file.originalname);
   }
 });
 
@@ -26,5 +26,5 @@ router.put('/:id', upload.single('filecv'), congvanController.updateCongVan);
 router.get('/', congvanController.getAllCongVan);
 router.get('/:id', congvanController.getCongVanById);
 router.delete('/:id', congvanController.deleteCongVan);
-router.use('/uploads', express.static('uploads'));
+
 module.exports = router;

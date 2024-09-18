@@ -10,7 +10,7 @@ exports.createCongVan = async (req, res) => {
             noidung: req.body.noidung,
             nguoilienquan: req.body.nguoilienquan,
             sotrang: req.body.sotrang,
-            filecv: req.file ? req.file.path : null // Lưu đường dẫn tệp nếu có
+            filecv: req.file ? req.file.originalname : null // Chỉ lưu tên file gốc
         });
         
         const newCongVan = await congvan.save();
