@@ -10,7 +10,7 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     // Thêm dấu thời gian trước tên gốc để tránh trùng lặp
-    cb(null, Date.now() + '-' + file.originalname);
+    cb(null,file.originalname);
   }
 });
 

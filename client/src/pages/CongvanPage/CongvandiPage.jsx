@@ -7,15 +7,16 @@ import { Input, Table } from 'antd';
 const CongvandiPage = ({ setBreadcrumb }) => {
   const location = useLocation();
   const [users, setUsers] = useState([]);
-  const [setSearchTerm] = useState(''); // Fix: destructure both the state and setter
   const [filteredUsers, setFilteredUsers] = useState([]);
 
+  // Fetch công văn data from API and set the initial data
   useEffect(() => {
     if (location.pathname === '/Congvandi') {
       setBreadcrumb('Công văn đi');
     }
     axios.get('http://localhost:5000/api/congvan')
       .then(response => {
+        console.log('Dữ liệu công văn:', response.data); // Log dữ liệu công văn
         setUsers(response.data);
         setFilteredUsers(response.data); // Initialize filtered users
       })
@@ -30,12 +31,15 @@ const CongvandiPage = ({ setBreadcrumb }) => {
   // Handle search input
   const handleSearch = (value) => {
     const keyword = value.toLowerCase();
-    setSearchTerm(keyword); // Update search term state
-    const filtered = users.filter(user => 
+
+    // Filter công văn data based on search term
+    const filtered = users.filter(user =>
       user.sokihieu.toLowerCase().includes(keyword) ||
       user.noidung.toLowerCase().includes(keyword) ||
-      user.nguoilienquan.toLowerCase().includes(keyword)
+      user.nguoilienquan.toLowerCase().includes(keyword) ||
+      (user.danhmuc && user.danhmuc.ten_DM && user.danhmuc.ten_DM.toLowerCase().includes(keyword)) // Kiểm tra danh mục
     );
+    
     setFilteredUsers(filtered); // Update filtered users based on search term
   };
 
@@ -79,6 +83,12 @@ const CongvandiPage = ({ setBreadcrumb }) => {
       key: 'sotrang',
     },
     {
+      title: 'Danh mục',
+      dataIndex: ['danhmuc', 'ten_DM'],
+      key: 'danhmuc',
+      render: (ten_DM) => ten_DM || 'Không có danh mục', // Display 'Không có danh mục' if no danh mục
+    },
+    {
       title: 'Tập tin',
       dataIndex: 'filecv',
       key: 'filecv',
@@ -93,7 +103,7 @@ const CongvandiPage = ({ setBreadcrumb }) => {
   return (
     <div className='container'>
       <Input.Search
-        placeholder="Tìm kiếm theo số hiệu, nội dung, hoặc người liên quan..."
+        placeholder="Tìm kiếm theo số hiệu, nội dung, người liên quan hoặc danh mục..."
         onSearch={handleSearch}
         enterButton
         size="large"

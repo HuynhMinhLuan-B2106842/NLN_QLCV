@@ -1,59 +1,62 @@
-const DanhMuc = require('../models/danhmuc');
+const NguoiKyDuyet = require('../models/nguoikyduyet');
 
-// Tạo mới danh mục
-exports.createDanhMuc = async (req, res) => {
+// Tạo mới người ký duyệt
+exports.createNguoiKyDuyet = async (req, res) => {
     try {
-        const danhMuc = new DanhMuc({
-            ten_DM: req.body.ten_DM
+        const nguoiKyDuyet = new NguoiKyDuyet({
+            ten_NKD: req.body.ten_NKD
         });
 
-        const newDanhMuc = await danhMuc.save();
-        res.status(201).json(newDanhMuc);
+        const newNguoiKyDuyet = await nguoiKyDuyet.save();
+        res.status(201).json(newNguoiKyDuyet);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 };
-// Lấy tất cả danh mục
-exports.getAllDanhMuc = async (req, res) => {
+
+// Lấy tất cả người ký duyệt
+exports.getAllNguoiKyDuyet = async (req, res) => {
     try {
-        const danhMucList = await DanhMuc.find();
-        res.json(danhMucList);
+        const nguoiKyDuyetList = await NguoiKyDuyet.find();
+        res.json(nguoiKyDuyetList);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
-// Lấy một danh mục theo ID
-exports.getDanhMucById = async (req, res) => {
+
+// Lấy một người ký duyệt theo ID
+exports.getNguoiKyDuyetById = async (req, res) => {
     try {
-        const danhMuc = await DanhMuc.findById(req.params.id);
-        if (!danhMuc) return res.status(404).json({ message: 'Danh mục không tồn tại' });
-        res.json(danhMuc);
+        const nguoiKyDuyet = await NguoiKyDuyet.findById(req.params.id);
+        if (!nguoiKyDuyet) return res.status(404).json({ message: 'Người ký duyệt không tồn tại' });
+        res.json(nguoiKyDuyet);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
-// Cập nhật một danh mục theo ID
-exports.updateDanhMuc = async (req, res) => {
+
+// Cập nhật một người ký duyệt theo ID
+exports.updateNguoiKyDuyet = async (req, res) => {
     try {
-        const danhMuc = await DanhMuc.findById(req.params.id);
-        if (!danhMuc) return res.status(404).json({ message: 'Danh mục không tồn tại' });
+        const nguoiKyDuyet = await NguoiKyDuyet.findById(req.params.id);
+        if (!nguoiKyDuyet) return res.status(404).json({ message: 'Người ký duyệt không tồn tại' });
 
-        danhMuc.ten_DM = req.body.ten_DM || danhMuc.ten_DM;
+        nguoiKyDuyet.ten_NKD = req.body.ten_NKD || nguoiKyDuyet.ten_NKD;
 
-        const updatedDanhMuc = await danhMuc.save();
-        res.json(updatedDanhMuc);
+        const updatedNguoiKyDuyet = await nguoiKyDuyet.save();
+        res.json(updatedNguoiKyDuyet);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 };
-// Xóa một danh mục
-exports.deleteDanhMuc = async (req, res) => {
-    try {
-        const danhMuc = await DanhMuc.findByIdAndDelete(req.params.id);
-        if (!danhMuc) return res.status(404).json({ message: 'Danh mục không tồn tại' });
 
-        //await danhMuc.remove();
-        res.json({ message: 'Danh mục đã được xóa' });
+// Xóa một người ký duyệt
+exports.deleteNguoiKyDuyet = async (req, res) => {
+    try {
+        const nguoiKyDuyet = await NguoiKyDuyet.findByIdAndDelete(req.params.id);
+        if (!nguoiKyDuyet) return res.status(404).json({ message: 'Người ký duyệt không tồn tại' });
+
+        res.json({ message: 'Người ký duyệt đã được xóa' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

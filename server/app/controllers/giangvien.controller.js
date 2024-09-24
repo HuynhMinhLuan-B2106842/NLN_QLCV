@@ -7,7 +7,7 @@ exports.createGiangVien = async (req, res) => {
             ten_GV: req.body.ten_GV,
             email_GV: req.body.email_GV,
             diachi_GV: req.body.diachi_GV,
-            sdt_K: req.body.sdt_GV
+            sdt_GV: req.body.sdt_GV
         });
 
         const newGiangVien = await giangVien.save();

@@ -1,12 +1,13 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { format } from 'date-fns'; // Import hàm format từ date-fns
+import { format } from 'date-fns';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const CongvandiPage = ({ setBreadcrumb }) => {
   const location = useLocation();
   const [users, setUsers] = useState([]);
+  const [categories, setCategories] = useState([]); // Danh sách danh mục
   const [editingIndex, setEditingIndex] = useState(-1);
   const [editingUser, setEditingUser] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -18,16 +19,32 @@ const CongvandiPage = ({ setBreadcrumb }) => {
     nguoilienquan: '',
     sotrang: '',
     filecv: null,
+    danhmuc: '' // Thêm trường danh mục
   });
   const [newFile, setNewFile] = useState(null);
-
-  useEffect(() => {
-    if (location.pathname === '/Congvandi') {
-      setBreadcrumb('Công văn đi');
-    }
+  
+  // Function để lấy danh sách công văn
+  const fetchUsers = () => {
     axios.get('http://localhost:5000/api/congvan')
       .then(response => setUsers(response.data))
       .catch(err => console.error('Lỗi khi lấy dữ liệu:', err));
+  };
+
+  // Function để lấy danh sách danh mục
+  const fetchCategories = () => {
+    axios.get('http://localhost:5000/api/danhmuc')
+      .then(response => setCategories(response.data))
+      .catch(err => console.error('Lỗi khi lấy danh mục:', err));
+  };
+
+  useEffect(() => {
+    if (location.pathname === '/QLCongvandi') {
+      setBreadcrumb('Quản lí công văn đi');
+    }
+
+    // Lấy dữ liệu ban đầu
+    fetchUsers();
+    fetchCategories();
   }, [location, setBreadcrumb]);
 
   const handleEditClick = (index) => {
@@ -55,9 +72,7 @@ const CongvandiPage = ({ setBreadcrumb }) => {
     axios.put(`http://localhost:5000/api/congvan/${editingUser._id}`, formData)
       .then(response => {
         console.log('Cập nhật thành công!', response.data);
-        setUsers(prevUsers => 
-          prevUsers.map(user => user._id === editingUser._id ? response.data : user)
-        );
+        fetchUsers();  // Sau khi cập nhật, lấy lại danh sách công văn
         setEditingIndex(-1);
         setNewFile(null);
       })
@@ -75,7 +90,7 @@ const CongvandiPage = ({ setBreadcrumb }) => {
       axios.delete(`http://localhost:5000/api/congvan/${id}`)
         .then(response => {
           console.log('Xóa thành công!', response.data);
-          setUsers(prevUsers => prevUsers.filter(user => user._id !== id));
+          fetchUsers();  // Sau khi xóa, lấy lại danh sách công văn
         })
         .catch(err => console.error('Lỗi khi xóa:', err));
     }
@@ -103,7 +118,7 @@ const CongvandiPage = ({ setBreadcrumb }) => {
     axios.post('http://localhost:5000/api/congvan', formData)
       .then(response => {
         console.log('Thêm công văn thành công!', response.data);
-        setUsers([...users, response.data]);
+        fetchUsers();  // Sau khi thêm, lấy lại danh sách công văn
         setShowAddForm(false);
         setNewCongVan({
           ngaybanhanh: '',
@@ -113,12 +128,12 @@ const CongvandiPage = ({ setBreadcrumb }) => {
           nguoilienquan: '',
           sotrang: '',
           filecv: null,
+          danhmuc: ''
         });
       })
       .catch(err => console.error('Lỗi khi thêm công văn:', err));
   };
 
-  // Hàm định dạng ngày
   const formatDate = (dateString) => {
     return format(new Date(dateString), 'dd/MM/yyyy');
   };
@@ -154,6 +169,20 @@ const CongvandiPage = ({ setBreadcrumb }) => {
               <input type="number" className="form-control" value={newCongVan.sotrang} onChange={(e) => handleAddInputChange(e, 'sotrang')} />
             </div>
             <div className="mb-3">
+              <label className="form-label">Danh mục</label>
+              <select 
+                className="form-select" 
+                value={newCongVan.danhmuc} 
+                onChange={(e) => handleAddInputChange(e, 'danhmuc')}
+                required
+              >
+                <option value="">Chọn danh mục</option>
+                {categories.map(category => (
+                  <option key={category._id} value={category._id}>{category.ten_DM}</option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-3">
               <label className="form-label">Tập tin</label>
               <input type="file" className="form-control" onChange={handleAddFileChange} />
             </div>
@@ -161,7 +190,7 @@ const CongvandiPage = ({ setBreadcrumb }) => {
             <button type="button" className="btn btn-secondary ms-2" onClick={() => setShowAddForm(false)}>Hủy</button>
           </form>
         )}
-        <table className="table table-bordered" style={{ border: '2px solid black' }}>
+        <table className="table">
           <thead>
             <tr>
               <th>Ngày ban hành</th>
@@ -170,50 +199,62 @@ const CongvandiPage = ({ setBreadcrumb }) => {
               <th>Nội dung</th>
               <th>Người liên quan</th>
               <th>Số trang</th>
-              <th style={{ maxWidth: '200px' }}>Tập tin</th>
+              <th>Danh mục</th>
+              <th>Tập tin</th>
               <th>Hành động</th>
             </tr>
           </thead>
           <tbody>
-            {
-              users.map((user, index) => {
-                return editingIndex === index ? (
-                  <tr key={index}>
-                    <td><input type="text" value={editingUser.ngaybanhanh} onChange={(e) => handleInputChange(e, 'ngaybanhanh')} /></td>
-                    <td><input type="text" value={editingUser.ngayhethieuluc} onChange={(e) => handleInputChange(e, 'ngayhethieuluc')} /></td>
-                    <td><input type="text" value={editingUser.sokihieu} onChange={(e) => handleInputChange(e, 'sokihieu')} /></td>
-                    <td><input type="text" value={editingUser.noidung} onChange={(e) => handleInputChange(e, 'noidung')} /></td>
-                    <td><input type="text" value={editingUser.nguoilienquan} onChange={(e) => handleInputChange(e, 'nguoilienquan')} /></td>
-                    <td><input type="text" value={editingUser.sotrang} onChange={(e) => handleInputChange(e, 'sotrang')} /></td>
-                    <td><input type="file" onChange={handleFileChange} /></td>
-                    <td>
-                      <button className="btn btn-success" onClick={() => handleSaveClick(index)}>Lưu</button>
-                      <button className="btn btn-secondary" onClick={handleCancelClick}>Hủy</button>
-                    </td>
-                  </tr>
-                ) : (
-                  <tr key={index}>
-                    <td>{formatDate(user.ngaybanhanh)}</td>
-                    <td>{formatDate(user.ngayhethieuluc)}</td>
-                    <td>{user.sokihieu}</td>
-                    <td>{user.noidung}</td>
-                    <td>{user.nguoilienquan}</td>
-                    <td>{user.sotrang}</td>
-                    <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {user.filecv ? (
-                        <a href={`http://localhost:5000/${user.filecv}`} target="_blank" rel="noopener noreferrer">
-                          {user.filecv.replace('uploads\\', '')}
-                        </a>
-                      ) : 'Không có'}
-                    </td>
-                    <td>
-                      <button className="btn btn-primary" onClick={() => handleEditClick(index)}>Chỉnh sửa</button>
-                      <button className="btn btn-danger" onClick={() => handleDeleteClick(user._id)}>Xóa</button>
-                    </td>
-                  </tr>
-                );
-              })
-            }
+            {users.map((user, index) => {
+              return editingIndex === index ? (
+                <tr key={index}>
+                  <td><input type="text" value={editingUser.ngaybanhanh} onChange={(e) => handleInputChange(e, 'ngaybanhanh')} /></td>
+                  <td><input type="text" value={editingUser.ngayhethieuluc} onChange={(e) => handleInputChange(e, 'ngayhethieuluc')} /></td>
+                  <td><input type="text" value={editingUser.sokihieu} onChange={(e) => handleInputChange(e, 'sokihieu')} /></td>
+                  <td><input type="text" value={editingUser.noidung} onChange={(e) => handleInputChange(e, 'noidung')} /></td>
+                  <td><input type="text" value={editingUser.nguoilienquan} onChange={(e) => handleInputChange(e, 'nguoilienquan')} /></td>
+                  <td><input type="text" value={editingUser.sotrang} onChange={(e) => handleInputChange(e, 'sotrang')} /></td>
+                  <td>
+                    <select 
+                      className="form-select" 
+                      value={editingUser.danhmuc} 
+                      onChange={(e) => handleInputChange(e, 'danhmuc')}
+                      required
+                    >
+                      {categories.map(category => (
+                        <option key={category._id} value={category._id}>{category.ten_DM}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td><input type="file" onChange={handleFileChange} /></td>
+                  <td>
+                    <button className="btn btn-success" onClick={() => handleSaveClick(index)}>Lưu</button>
+                    <button className="btn btn-secondary" onClick={handleCancelClick}>Hủy</button>
+                  </td>
+                </tr>
+              ) : (
+                <tr key={index}>
+                  <td>{formatDate(user.ngaybanhanh)}</td>
+                  <td>{formatDate(user.ngayhethieuluc)}</td>
+                  <td>{user.sokihieu}</td>
+                  <td>{user.noidung}</td>
+                  <td>{user.nguoilienquan}</td>
+                  <td>{user.sotrang}</td>
+                  <td>{user.danhmuc ? user.danhmuc.ten_DM : 'Không có'}</td>
+                  <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {user.filecv ? (
+                      <a href={`http://localhost:5000/${user.filecv}`} target="_blank" rel="noopener noreferrer">
+                        {/* {user.filecv.replace('uploads\\', '')} */} Xem 
+                      </a>
+                    ) : 'Không có'}
+                  </td>
+                  <td>
+                    <button className="btn btn-primary" onClick={() => handleEditClick(index)}>Chỉnh sửa</button>
+                    <button className="btn btn-danger" onClick={() => handleDeleteClick(user._id)}>Xóa</button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

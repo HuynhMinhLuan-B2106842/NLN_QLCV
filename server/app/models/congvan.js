@@ -29,6 +29,11 @@ const congvanSchema = new mongoose.Schema({
     filecv: {
         type: String,
         required: false,
+    },
+    danhmuc: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'danhmuc',  // Tham chiếu đến model danhmuc
+        required: true
     }
 })
 const congvan = mongoose.model('congvan', congvanSchema)
