@@ -22,14 +22,15 @@
 // reportWebVitals();
 // index.js
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client'; // Import createRoot thay vì ReactDOM.render
 import { BrowserRouter as Router } from 'react-router-dom';
 import App from './App';
 import 'antd/dist/reset.css'; // Optional if you reset Ant Design styles
 
-ReactDOM.render(
+const container = document.getElementById('root');
+const root = createRoot(container); // Tạo root
+root.render(
   <Router>
     <App />
-  </Router>,
-  document.getElementById('root')
+  </Router>
 );

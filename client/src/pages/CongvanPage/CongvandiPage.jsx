@@ -8,7 +8,7 @@ const CongvandiPage = ({ setBreadcrumb }) => {
   const location = useLocation();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
-
+  
   // Fetch công văn data from API and set the initial data
   useEffect(() => {
     if (location.pathname === '/Congvandi') {
@@ -37,7 +37,8 @@ const CongvandiPage = ({ setBreadcrumb }) => {
       user.sokihieu.toLowerCase().includes(keyword) ||
       user.noidung.toLowerCase().includes(keyword) ||
       user.nguoilienquan.toLowerCase().includes(keyword) ||
-      (user.danhmuc && user.danhmuc.ten_DM && user.danhmuc.ten_DM.toLowerCase().includes(keyword)) // Kiểm tra danh mục
+      (user.danhmuc && user.danhmuc.ten_DM && user.danhmuc.ten_DM.toLowerCase().includes(keyword)) || // Kiểm tra danh mục
+      (user.chude && user.chude.ten_CD && user.chude.ten_CD.toLowerCase().includes(keyword)) // Kiểm tra chủ đề
     );
     
     setFilteredUsers(filtered); // Update filtered users based on search term
@@ -49,6 +50,18 @@ const CongvandiPage = ({ setBreadcrumb }) => {
       title: 'STT',
       key: 'stt',
       render: (_, __, index) => index + 1,
+    },
+    {
+      title: 'Danh mục',
+      dataIndex: ['danhmuc', 'ten_DM'],
+      key: 'danhmuc',
+      render: (ten_DM) => ten_DM || 'Không có danh mục', 
+    },
+    {
+      title: 'Chủ đề',
+      dataIndex: ['chude', 'ten_CD'],
+      key: 'chude',
+      render: (ten_CD) => ten_CD || 'Không có chủ đề', 
     },
     {
       title: 'Ngày ban hành',
@@ -82,19 +95,14 @@ const CongvandiPage = ({ setBreadcrumb }) => {
       dataIndex: 'sotrang',
       key: 'sotrang',
     },
-    {
-      title: 'Danh mục',
-      dataIndex: ['danhmuc', 'ten_DM'],
-      key: 'danhmuc',
-      render: (ten_DM) => ten_DM || 'Không có danh mục', // Display 'Không có danh mục' if no danh mục
-    },
+
     {
       title: 'Tập tin',
       dataIndex: 'filecv',
       key: 'filecv',
       render: (filecv) => filecv ? (
         <a href={`http://localhost:5000/${filecv}`} target="_blank" rel="noopener noreferrer">
-          {filecv.replace('uploads\\', '')}
+          {/* {filecv.replace('uploads\\', '')} */} Xem
         </a>
       ) : 'Không có',
     },
@@ -103,7 +111,7 @@ const CongvandiPage = ({ setBreadcrumb }) => {
   return (
     <div className='container'>
       <Input.Search
-        placeholder="Tìm kiếm theo số hiệu, nội dung, người liên quan hoặc danh mục..."
+        placeholder="Tìm kiếm theo số hiệu, nội dung, người liên quan, danh mục hoặc chủ đề..."
         onSearch={handleSearch}
         enterButton
         size="large"

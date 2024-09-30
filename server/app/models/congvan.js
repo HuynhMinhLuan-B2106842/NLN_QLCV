@@ -34,6 +34,11 @@ const congvanSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'danhmuc',  // Tham chiếu đến model danhmuc
         required: true
+    },
+    chude: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'chude',  // Tham chiếu đến model chude
+        required: true
     }
 })
 const congvan = mongoose.model('congvan', congvanSchema)

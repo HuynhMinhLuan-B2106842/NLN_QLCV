@@ -148,16 +148,21 @@ const HeaderComponent = ({ breadcrumb }) => {
     token: { colorBgContainer },
   } = theme.useToken();
 
+  // Chia tách breadcrumb thành mảng
+  const breadcrumbItems = breadcrumb.split('>').map((item, index) => ({
+    key: index,
+    title: item.trim(),
+  }));
+
   return (
     <>
-      <Header style={{ padding: 0, background: colorBgContainer, textAlign: 'center', fontSize: '50px' }}>
+      <Header style={{ padding: '20px', background: colorBgContainer, textAlign: 'center', fontSize: '24px' }}>
         Hệ thống quản lí công văn
       </Header>
-      <Breadcrumb style={{ margin: '16px 0', textAlign: 'left' }}>
-        <Breadcrumb.Item>{breadcrumb}</Breadcrumb.Item>
-      </Breadcrumb>
+      <Breadcrumb style={{ margin: '16px 0', padding: '0 24px' }} items={breadcrumbItems} />
     </>
   );
 };
 
 export default HeaderComponent;
+

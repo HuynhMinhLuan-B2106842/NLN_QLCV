@@ -4,10 +4,11 @@ import { useLocation } from 'react-router-dom';
 import { format } from 'date-fns';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const CongvandiPage = ({ setBreadcrumb }) => {
+const QLCongvandiPage = ({ setBreadcrumb }) => {
   const location = useLocation();
   const [users, setUsers] = useState([]);
-  const [categories, setCategories] = useState([]); // Danh sách danh mục
+  const [categories, setCategories] = useState([]); 
+  const [topics, setTopics] = useState([]);
   const [editingIndex, setEditingIndex] = useState(-1);
   const [editingUser, setEditingUser] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -19,7 +20,8 @@ const CongvandiPage = ({ setBreadcrumb }) => {
     nguoilienquan: '',
     sotrang: '',
     filecv: null,
-    danhmuc: '' // Thêm trường danh mục
+    danhmuc: '', // Thêm trường danh mục
+    chude: ''
   });
   const [newFile, setNewFile] = useState(null);
   
@@ -36,6 +38,11 @@ const CongvandiPage = ({ setBreadcrumb }) => {
       .then(response => setCategories(response.data))
       .catch(err => console.error('Lỗi khi lấy danh mục:', err));
   };
+  const fetchTopics = () => {
+    axios.get('http://localhost:5000/api/chude')
+      .then(response => setTopics(response.data))
+      .catch(err => console.error('Lỗi khi lấy chủ đề:', err));
+  };
 
   useEffect(() => {
     if (location.pathname === '/QLCongvandi') {
@@ -45,6 +52,7 @@ const CongvandiPage = ({ setBreadcrumb }) => {
     // Lấy dữ liệu ban đầu
     fetchUsers();
     fetchCategories();
+    fetchTopics();
   }, [location, setBreadcrumb]);
 
   const handleEditClick = (index) => {
@@ -54,6 +62,7 @@ const CongvandiPage = ({ setBreadcrumb }) => {
 
   const handleInputChange = (e, field) => {
     setEditingUser({ ...editingUser, [field]: e.target.value });
+    console.log(`Chủ đề đã cập nhật: ${e.target.value}`);
   };
 
   const handleFileChange = (e) => {
@@ -68,7 +77,7 @@ const CongvandiPage = ({ setBreadcrumb }) => {
     if (newFile) {
       formData.append('filecv', newFile);
     }
-
+    console.log('Dữ liệu gửi đi:', editingUser);
     axios.put(`http://localhost:5000/api/congvan/${editingUser._id}`, formData)
       .then(response => {
         console.log('Cập nhật thành công!', response.data);
@@ -128,7 +137,8 @@ const CongvandiPage = ({ setBreadcrumb }) => {
           nguoilienquan: '',
           sotrang: '',
           filecv: null,
-          danhmuc: ''
+          danhmuc: '',
+          chude: ''
         });
       })
       .catch(err => console.error('Lỗi khi thêm công văn:', err));
@@ -144,6 +154,34 @@ const CongvandiPage = ({ setBreadcrumb }) => {
         <button className="btn btn-primary mb-3" onClick={handleAddClick}>Thêm công văn</button>
         {showAddForm && (
           <form onSubmit={handleAddSubmit}>
+            <div className="mb-3">
+              <label className="form-label">Danh mục</label>
+              <select 
+                className="form-select" 
+                value={newCongVan.danhmuc} 
+                onChange={(e) => handleAddInputChange(e, 'danhmuc')}
+                required
+              >
+                <option value="">Chọn danh mục</option>
+                {categories.map(category => (
+                  <option key={category._id} value={category._id}>{category.ten_DM}</option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Chủ đề</label>
+              <select 
+                className="form-select" 
+                value={newCongVan.chude} 
+                onChange={(e) => handleAddInputChange(e, 'chude')}
+                required
+              >
+                <option value="">Chọn chủ đề</option>
+                {topics.map(topic => (
+                  <option key={topic._id} value={topic._id}>{topic.ten_CD}</option>
+                ))}
+              </select>
+            </div>
             <div className="mb-3">
               <label className="form-label">Ngày ban hành</label>
               <input type="date" className="form-control" value={newCongVan.ngaybanhanh} onChange={(e) => handleAddInputChange(e, 'ngaybanhanh')} />
@@ -168,20 +206,7 @@ const CongvandiPage = ({ setBreadcrumb }) => {
               <label className="form-label">Số trang</label>
               <input type="number" className="form-control" value={newCongVan.sotrang} onChange={(e) => handleAddInputChange(e, 'sotrang')} />
             </div>
-            <div className="mb-3">
-              <label className="form-label">Danh mục</label>
-              <select 
-                className="form-select" 
-                value={newCongVan.danhmuc} 
-                onChange={(e) => handleAddInputChange(e, 'danhmuc')}
-                required
-              >
-                <option value="">Chọn danh mục</option>
-                {categories.map(category => (
-                  <option key={category._id} value={category._id}>{category.ten_DM}</option>
-                ))}
-              </select>
-            </div>
+
             <div className="mb-3">
               <label className="form-label">Tập tin</label>
               <input type="file" className="form-control" onChange={handleAddFileChange} />
@@ -193,13 +218,14 @@ const CongvandiPage = ({ setBreadcrumb }) => {
         <table className="table">
           <thead>
             <tr>
+              <th>Danh mục</th>
+              <th>Chủ đề</th>
               <th>Ngày ban hành</th>
               <th>Ngày hết hiệu lực</th>
               <th>Số hiệu</th>
               <th>Nội dung</th>
               <th>Người liên quan</th>
               <th>Số trang</th>
-              <th>Danh mục</th>
               <th>Tập tin</th>
               <th>Hành động</th>
             </tr>
@@ -208,12 +234,6 @@ const CongvandiPage = ({ setBreadcrumb }) => {
             {users.map((user, index) => {
               return editingIndex === index ? (
                 <tr key={index}>
-                  <td><input type="text" value={editingUser.ngaybanhanh} onChange={(e) => handleInputChange(e, 'ngaybanhanh')} /></td>
-                  <td><input type="text" value={editingUser.ngayhethieuluc} onChange={(e) => handleInputChange(e, 'ngayhethieuluc')} /></td>
-                  <td><input type="text" value={editingUser.sokihieu} onChange={(e) => handleInputChange(e, 'sokihieu')} /></td>
-                  <td><input type="text" value={editingUser.noidung} onChange={(e) => handleInputChange(e, 'noidung')} /></td>
-                  <td><input type="text" value={editingUser.nguoilienquan} onChange={(e) => handleInputChange(e, 'nguoilienquan')} /></td>
-                  <td><input type="text" value={editingUser.sotrang} onChange={(e) => handleInputChange(e, 'sotrang')} /></td>
                   <td>
                     <select 
                       className="form-select" 
@@ -226,6 +246,25 @@ const CongvandiPage = ({ setBreadcrumb }) => {
                       ))}
                     </select>
                   </td>
+                  <td>
+                    <select 
+                      className="form-select" 
+                      value={editingUser.chude} 
+                      onChange={(e) => handleInputChange(e, 'chude')}
+                      required
+                    >
+                      {topics.map(topic => (
+                        <option key={topic._id} value={topic._id}>{topic.ten_CD}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td><input type="text" value={editingUser.ngaybanhanh} onChange={(e) => handleInputChange(e, 'ngaybanhanh')} /></td>
+                  <td><input type="text" value={editingUser.ngayhethieuluc} onChange={(e) => handleInputChange(e, 'ngayhethieuluc')} /></td>
+                  <td><input type="text" value={editingUser.sokihieu} onChange={(e) => handleInputChange(e, 'sokihieu')} /></td>
+                  <td><input type="text" value={editingUser.noidung} onChange={(e) => handleInputChange(e, 'noidung')} /></td>
+                  <td><input type="text" value={editingUser.nguoilienquan} onChange={(e) => handleInputChange(e, 'nguoilienquan')} /></td>
+                  <td><input type="text" value={editingUser.sotrang} onChange={(e) => handleInputChange(e, 'sotrang')} /></td>
+
                   <td><input type="file" onChange={handleFileChange} /></td>
                   <td>
                     <button className="btn btn-success" onClick={() => handleSaveClick(index)}>Lưu</button>
@@ -234,13 +273,14 @@ const CongvandiPage = ({ setBreadcrumb }) => {
                 </tr>
               ) : (
                 <tr key={index}>
+                  <td>{user.danhmuc ? user.danhmuc.ten_DM : 'Không có'}</td>
+                  <td>{user.chude ? user.chude.ten_CD : 'Không có'}</td>
                   <td>{formatDate(user.ngaybanhanh)}</td>
                   <td>{formatDate(user.ngayhethieuluc)}</td>
                   <td>{user.sokihieu}</td>
                   <td>{user.noidung}</td>
                   <td>{user.nguoilienquan}</td>
                   <td>{user.sotrang}</td>
-                  <td>{user.danhmuc ? user.danhmuc.ten_DM : 'Không có'}</td>
                   <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {user.filecv ? (
                       <a href={`http://localhost:5000/${user.filecv}`} target="_blank" rel="noopener noreferrer">
@@ -262,4 +302,4 @@ const CongvandiPage = ({ setBreadcrumb }) => {
   );
 };
 
-export default CongvandiPage;
+export default QLCongvandiPage;

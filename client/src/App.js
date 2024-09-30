@@ -1,39 +1,6 @@
-// import React, { Fragment } from 'react'
-// import { BrowserRouter as Router, Routes, Route} from 'react-router-dom'
-
-// import { routes } from './routes'
-
-// import Defaultcomponent from './components/Defaultcomponent/Defaultcomponent'
-
-// function App() {
-
-//   return (
-//     <div>
-//       <Router>
-//         <Routes>
-//           {routes.map((route) => {
-//             const Page = route.page
-//             const Layout = route.isShowHeader ? Defaultcomponent : Fragment
-//             return(
-//               <Route path={route.path} element={
-//               <Layout>
-//                 <Page />
-//               </Layout>
-              
-//             } />
-//             )
-//           })}
-          
-//         </Routes>
-//       </Router>
-//     </div>
-//   )
-// }
-// export default App
-// App.js
 import React, { useState } from 'react';
 import { Layout, Menu } from 'antd';
-import { DesktopOutlined, FileSearchOutlined,FileOutlined, HomeOutlined, UsergroupAddOutlined, FileAddOutlined } from '@ant-design/icons';
+import { DesktopOutlined, FileSearchOutlined, FileOutlined, HomeOutlined, UsergroupAddOutlined, FileAddOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import RouterComponent from './routes/index';
 import HeaderComponent from './components/Headercomponent/Headercomponent';
@@ -87,7 +54,7 @@ const App = () => {
         <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline" items={items} />
       </Sider>
       <Layout>
-        <HeaderComponent breadcrumb={breadcrumb} />
+        <HeaderComponent breadcrumb={breadcrumb} /> {/* Chỗ này */}
         <Content style={{ margin: '0 16px' }}>
           <div style={{ padding: 24, minHeight: 360, background: '#fff', borderRadius: '8px' }}>
             <RouterComponent setBreadcrumb={setBreadcrumb} />
