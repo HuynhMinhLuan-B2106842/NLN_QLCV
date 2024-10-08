@@ -31,6 +31,7 @@ import CongvannoiboPage from '../../src/pages/CongvanPage/CongvannoiboPage';
 import QLcongvandiPage from '../../src/pages/QLcongvanPage/QLcongvandiPage';
 import QLkhoaPage from '../../src/pages/QLlienquanPage/KhoaPage';
 import QLGiangvienPage from '../../src/pages/QLlienquanPage/GiangvienPage';
+import QLDanhMucPage from '../pages/QLlienquanPage/DanhmucPage';
 
 const RouterComponent = ({ setBreadcrumb }) => (
   <Routes>
@@ -41,6 +42,7 @@ const RouterComponent = ({ setBreadcrumb }) => (
     <Route path="/QLCongvandi" element={<QLcongvandiPage setBreadcrumb={setBreadcrumb} />} />
     <Route path="/QLkhoa" element={<QLkhoaPage setBreadcrumb={setBreadcrumb}/>}/>
     <Route path="/QLGiangvien" element={<QLGiangvienPage setBreadcrumb={setBreadcrumb}/>}/>
+    <Route path="/QLdanhmuc" element={<QLDanhMucPage setBreadcrumb={setBreadcrumb}/>}/>
     <Route path='*' element={<NotFoundPage />} />
   </Routes>
 );

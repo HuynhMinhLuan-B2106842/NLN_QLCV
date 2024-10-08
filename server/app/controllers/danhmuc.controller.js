@@ -4,9 +4,9 @@ const DanhMuc = require('../models/danhmuc');
 exports.createDanhMuc = async (req, res) => {
     try {
         const danhMuc = new DanhMuc({
-            ten_DM: req.body.ten_DM
+            ten_DM: req.body.ten_DM,
+            chuDe: req.body.chuDe || []
         });
-
         const newDanhMuc = await danhMuc.save();
         res.status(201).json(newDanhMuc);
     } catch (error) {
@@ -39,6 +39,7 @@ exports.updateDanhMuc = async (req, res) => {
         if (!danhMuc) return res.status(404).json({ message: 'Danh mục không tồn tại' });
 
         danhMuc.ten_DM = req.body.ten_DM || danhMuc.ten_DM;
+        danhMuc.chuDe = req.body.chuDe || danhMuc.chuDe;
 
         const updatedDanhMuc = await danhMuc.save();
         res.json(updatedDanhMuc);

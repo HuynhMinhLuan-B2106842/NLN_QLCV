@@ -38,6 +38,7 @@ const App = () => {
     getItem('Quản lí liên quan', 'sub2', <UsergroupAddOutlined />, [
       getItem('Quản lí khoa', '6', null, null, () => handleMenuClick('/QLkhoa', 'Quản lí khoa')),
       getItem('Quản lí giảng viên', '7', null, null, () => handleMenuClick('/QLGiangvien', 'Quản lí giảng viên')),
+      getItem('Quản lí danh mục', '12', null, null, () => handleMenuClick('/QLdanhmuc', 'Quản lí danh mục')),
     ]),
     getItem('Quản Lí Công Văn', 'sub3', <FileAddOutlined />, [
       getItem('Quản Lí Công văn đến', '8', null, null, () => handleMenuClick('/congvan', 'Quản Lí Công văn đến')),
@@ -61,7 +62,7 @@ const App = () => {
           </div>
         </Content>
         <Footer style={{ textAlign: 'center' }}>
-          Ant Design ©{new Date().getFullYear()} Created by Ant UED
+          {/* Ant Design ©{new Date().getFullYear()} Created by Ant UED */}
         </Footer>
       </Layout>
     </Layout>

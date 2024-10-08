@@ -26,5 +26,5 @@ router.put('/:id', upload.single('filecv'), congvanController.updateCongVan);
 router.get('/', congvanController.getAllCongVan);
 router.get('/:id', congvanController.getCongVanById);
 router.delete('/:id', congvanController.deleteCongVan);
-
+router.get('/thongke/thongke', congvanController.thongkeCongvan);
 module.exports = router;

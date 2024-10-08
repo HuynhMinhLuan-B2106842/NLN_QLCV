@@ -36,10 +36,14 @@ const congvanSchema = new mongoose.Schema({
         required: true
     },
     chude: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'chude',  // Tham chiếu đến model chude
+        type: String,
         required: true
-    }
+    },
+    // loaicongvan: {
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: 'loaicongvan',  // Tham chiếu đến model loaicongvan
+    //     required: true
+    // }
 })
 const congvan = mongoose.model('congvan', congvanSchema)
 module.exports = congvan
