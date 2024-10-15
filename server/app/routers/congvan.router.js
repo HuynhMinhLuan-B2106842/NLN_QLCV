@@ -28,3 +28,8 @@ router.get('/:id', congvanController.getCongVanById);
 router.delete('/:id', congvanController.deleteCongVan);
 router.get('/thongke/thongke', congvanController.thongkeCongvan);
 module.exports = router;
+// const upload = multer({ dest: 'uploads/' }); // Cấu hình multer
+
+// // Tạo công văn mới
+// router.post('/', upload.single('filecv'), congvanController.createCongVan);
+// router.put('/:id', upload.single('filecv'), congvanController.updateCongVan);

@@ -6,7 +6,7 @@ import { Table, Input } from 'antd';
 
 const { Search } = Input;
 
-const QLCongvandiPage = ({ setBreadcrumb }) => {
+const CongvandiPage = ({ setBreadcrumb }) => {
   const location = useLocation();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
@@ -14,15 +14,16 @@ const QLCongvandiPage = ({ setBreadcrumb }) => {
   const fetchUsers = () => {
     axios.get('http://localhost:5000/api/congvan')
       .then(response => {
-        setUsers(response.data);
-        setFilteredUsers(response.data); // Khởi tạo danh sách người dùng đã lọc
+        const filteredData = response.data.filter(user => user.danhmuc && user.danhmuc.ten_DM === 'Công văn đi');
+        setUsers(filteredData);
+        setFilteredUsers(filteredData); // Khởi tạo danh sách người dùng đã lọc
       })
       .catch(err => console.error('Lỗi khi lấy dữ liệu:', err));
   };
 
   useEffect(() => {
-    if (location.pathname === '/QLCongvandi') {
-      setBreadcrumb('Quản lí công văn đi');
+    if (location.pathname === '/Congvandi') {
+      setBreadcrumb('Công văn đi');
     }
     fetchUsers();
   }, [location, setBreadcrumb]);
@@ -106,4 +107,4 @@ const QLCongvandiPage = ({ setBreadcrumb }) => {
   );
 };
 
-export default QLCongvandiPage;
+export default CongvandiPage;

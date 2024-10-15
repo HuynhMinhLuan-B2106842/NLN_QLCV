@@ -35,10 +35,10 @@ const congvanSchema = new mongoose.Schema({
         ref: 'danhmuc',  // Tham chiếu đến model danhmuc
         required: true
     },
-    chude: {
+    chude: [{
         type: String,
         required: true
-    },
+    }],
     // loaicongvan: {
     //     type: mongoose.Schema.Types.ObjectId,
     //     ref: 'loaicongvan',  // Tham chiếu đến model loaicongvan
