@@ -18,26 +18,33 @@ exports.createCongVan = async (req, res) => {
         // Kiểm tra danh mục tồn tại
         const danhMuc = await checkDanhMucExists(req.body.danhmuc);
 
-        // Kiểm tra từng chủ đề có nằm trong danh mục không
-// Nhận dữ liệu chủ đề từ phía client
+        // Xử lý mảng chủ đề
         let chudeArray;
 
-        // Kiểm tra xem chude có phải là mảng không
-        if (Array.isArray(req.body.chude)) {
+        // Nếu req.body.chude là một chuỗi JSON, chuyển đổi nó thành mảng
+        if (typeof req.body.chude === 'string') {
+            try {
+                chudeArray = JSON.parse(req.body.chude);
+            } catch (error) {
+                throw new Error('Dữ liệu chủ đề không hợp lệ');
+            }
+        } else if (Array.isArray(req.body.chude)) {
             chudeArray = req.body.chude;
         } else {
-            // Nếu chude không phải là mảng, xử lý chuỗi
-            const chudeString = req.body.chude; // Nhận chuỗi từ client
-            chudeArray = chudeString.split(',').map(item => item.trim()); // Chia chuỗi và xóa khoảng trắng
+            throw new Error('Dữ liệu chủ đề không hợp lệ');
         }
-
+        
         // Kiểm tra từng chủ đề có nằm trong danh mục không
+        const danhMucChuDeTenArray = danhMuc.chuDe.map(cd => cd.ten);
         for (const chude of chudeArray) {
-            if (!danhMuc.chuDe.includes(chude)) {
-                throw new Error(`Chủ đề ${chude} không tồn tại trong danh mục này`);
+            if (!danhMucChuDeTenArray.includes(chude)) {
+                throw new Error(`Chủ đề "${chude}" không tồn tại trong danh mục này`);
             }
-}
-
+        }
+        
+        console.log(chudeArray);
+        console.log(danhMuc.chuDe);
+        
 
         // Tạo mới công văn
         const congvan = new CongVan({
@@ -56,6 +63,7 @@ exports.createCongVan = async (req, res) => {
         const newCongVan = await congvan.save();
         res.status(201).json(newCongVan);
     } catch (error) {
+        console.error(error);
         res.status(400).json({ message: error.message });
     }
 };
@@ -93,25 +101,33 @@ exports.updateCongVan = async (req, res) => {
 
         if (req.body.danhmuc) {
             const danhMuc = await checkDanhMucExists(req.body.danhmuc);
+            if (!danhMuc) return res.status(404).json({ message: 'Danh mục không tồn tại' });
 
-            // Nhận dữ liệu chủ đề từ phía client
+            // Xử lý mảng chủ đề
             let chudeArray;
-
-            // Kiểm tra xem chude có phải là mảng không
-            if (Array.isArray(req.body.chude)) {
+            console.log(req.body.chude); // In ra để kiểm tra
+            if (typeof req.body.chude === 'string') {
+                // Kiểm tra nếu là chuỗi
+                try {
+                    chudeArray = JSON.parse(req.body.chude); // Phân tích cú pháp chuỗi JSON
+                } catch (error) {
+                    return res.status(400).json({ message: 'Dữ liệu chủ đề không hợp lệ' });
+                }
+            } else if (Array.isArray(req.body.chude)) {
+                // Nếu đã là mảng
                 chudeArray = req.body.chude;
             } else {
-                // Nếu chude không phải là mảng, xử lý chuỗi
-                const chudeString = req.body.chude; // Nhận chuỗi từ client
-                chudeArray = chudeString.split(',').map(item => item.trim()); // Chia chuỗi và xóa khoảng trắng
+                return res.status(400).json({ message: 'Dữ liệu chủ đề không hợp lệ' });
             }
 
             // Kiểm tra từng chủ đề có nằm trong danh mục không
+            const danhMucChuDeTenArray = danhMuc.chuDe.map(cd => cd.ten);
             for (const chude of chudeArray) {
-                if (!danhMuc.chuDe.includes(chude)) {
-                    throw new Error(`Chủ đề ${chude} không tồn tại trong danh mục này`);
+                if (!danhMucChuDeTenArray.includes(chude)) {
+                    return res.status(400).json({ message: `Chủ đề "${chude}" không tồn tại trong danh mục này` });
                 }
             }
+
             congvan.danhmuc = req.body.danhmuc;
             congvan.chude = chudeArray; // Cập nhật chủ đề
         }
@@ -185,5 +201,46 @@ exports.thongkeCongvan = async (req, res) => {
     } catch (error) {
         console.error('Lỗi khi lấy dữ liệu thống kê:', error);
         res.status(500).send('Lỗi server');
+    }
+};
+// Tìm kiếm công văn theo từ khóa trong mảng chuDe.tuKhoa
+exports.searchCongVanByKeyword = async (req, res) => {
+    try {
+        const keyword = decodeURIComponent(req.query.keyword || '');  // Từ khóa tìm kiếm được truyền qua query params
+
+        // Tìm danh mục có chủ đề chứa từ khóa trong tuKhoa
+        const danhMucList = await DanhMuc.find({
+            'chuDe.tuKhoa': { $regex: keyword, $options: 'i' }  // Tìm kiếm không phân biệt chữ hoa chữ thường
+        });
+
+        // Lấy tất cả các chủ đề có chứa từ khóa trong tuKhoa từ danh mục đã tìm được
+        const filteredChuDe = danhMucList.flatMap(danhmuc => 
+            danhmuc.chuDe.filter(cd => cd.tuKhoa.some(tk => new RegExp(keyword, 'i').test(tk)))
+        );
+
+        // Lấy danh sách các tên chủ đề đã lọc
+        const chuDeNames = filteredChuDe.map(cd => cd.ten);
+
+        // Tìm kiếm công văn không chỉ dựa trên chủ đề mà còn các trường khác
+        const congvanList = await CongVan.find({
+            $or: [
+                { chude: { $in: chuDeNames } },  // Tìm theo tên chủ đề
+                { sokihieu: { $regex: keyword, $options: 'i' } },  // Tìm theo số ký hiệu
+                { noidung: { $regex: keyword, $options: 'i' } },  // Tìm theo nội dung
+                { nguoilienquan: { $regex: keyword, $options: 'i' } },  // Tìm theo người liên quan
+            ]
+        })
+        .populate('danhmuc', 'ten_DM')  // Lấy tên danh mục
+        .select('ngaybanhanh ngayhethieuluc sokihieu noidung nguoilienquan sotrang filecv chude');
+
+        // Nếu không tìm thấy công văn nào phù hợp
+        if (congvanList.length === 0) {
+            return res.status(404).json({ message: 'Không tìm thấy công văn nào với từ khóa này' });
+        }
+
+        res.json(congvanList);
+    } catch (error) {
+        console.error('Lỗi khi tìm kiếm công văn:', error);
+        res.status(500).json({ message: error.message });
     }
 };

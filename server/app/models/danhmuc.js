@@ -1,3 +1,17 @@
+// const mongoose = require("mongoose");
+
+// const danhmucSchema = new mongoose.Schema({
+//     ten_DM: {
+//         type: String,
+//         required: true,
+//     },
+//     chuDe: [{
+//         type: String,
+//     }]
+// });
+
+// const DanhMuc = mongoose.model('danhmuc', danhmucSchema);
+// module.exports = DanhMuc;
 const mongoose = require("mongoose");
 
 const danhmucSchema = new mongoose.Schema({
@@ -6,7 +20,12 @@ const danhmucSchema = new mongoose.Schema({
         required: true,
     },
     chuDe: [{
-        type: String,
+        ten: {  // Tên của chủ đề
+            type: String,
+        },
+        tuKhoa: [{  // Mảng các từ khóa liên quan đến chủ đề
+            type: String,
+        }]
     }]
 });
 

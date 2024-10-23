@@ -63,7 +63,8 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
     setEditingUser({ ...users[index] });
 
     const selectedCategory = categories.find(category => category._id === users[index].danhmuc._id);
-    setEditingAvailableTopics(selectedCategory ? selectedCategory.chuDe : []);
+    // Trích xuất tên chủ đề
+    setEditingAvailableTopics(selectedCategory ? selectedCategory.chuDe.map(topic => topic.ten) : []);
   };
 
   const handleInputChange = (value, field) => {
@@ -71,15 +72,21 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
 
     if (field === 'danhmuc') {
       const selectedCategory = categories.find(category => category._id === value);
-      setEditingAvailableTopics(selectedCategory ? selectedCategory.chuDe : []);
+      // Trích xuất tên chủ đề
+      setEditingAvailableTopics(selectedCategory ? selectedCategory.chuDe.map(topic => topic.ten) : []);
       setEditingUser(prevState => ({ ...prevState, chude: [] })); // Reset chude
     }
   };
 
   const handleSaveClick = () => {
     const formData = new FormData();
+    // Chuyển đổi các trường thành chuỗi (nếu cần)
     Object.keys(editingUser).forEach(key => {
-      formData.append(key, editingUser[key]);
+      if (key === 'chude' || key === 'ngaybanhanh' || key === 'ngayhethieuluc') {
+        formData.append(key, JSON.stringify(editingUser[key]));
+      } else {
+        formData.append(key, editingUser[key]);
+      }
     });
     if (newFile) {
       formData.append('filecv', newFile);
@@ -123,7 +130,8 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
 
     if (field === 'danhmuc') {
       const selectedCategory = categories.find(category => category._id === value);
-      setAvailableTopics(selectedCategory ? selectedCategory.chuDe : []);
+      // Trích xuất tên chủ đề
+      setAvailableTopics(selectedCategory ? selectedCategory.chuDe.map(topic => topic.ten) : []);
       setNewCongVan(prevState => ({ ...prevState, chude: [] })); // Reset chude
     }
   };
@@ -135,10 +143,21 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
   };
 
   const handleAddSubmit = (values) => {
+    console.log('Submitting new Cong Van:', newCongVan);
     const formData = new FormData();
+    // Chuyển đổi các trường thành chuỗi (nếu cần)
     Object.keys(newCongVan).forEach(key => {
-      formData.append(key, newCongVan[key]);
+      if (key === 'chude') {
+        formData.append(key, JSON.stringify(newCongVan[key]));
+      } else {
+        formData.append(key, newCongVan[key]);
+      }
     });
+
+    for (const [key, value] of formData.entries()) {
+      console.log(`${key}:`, value);
+    }
+
     axios.post('http://localhost:5000/api/congvan', formData)
       .then(response => {
         fetchUsers();
@@ -166,7 +185,7 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
 
   const columns = [
     {
-      title: 'Danh mục',
+      title: 'Loại công văn',
       dataIndex: 'danhmuc',
       render: (text, record) => record.danhmuc ? record.danhmuc.ten_DM : 'Không có',
     },
@@ -229,9 +248,9 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
         onCancel={() => setShowAddForm(false)}
       >
         <Form onFinish={handleAddSubmit}>
-          <Form.Item label="Danh mục" name="danhmuc" required>
+          <Form.Item label="Loại công văn" name="danhmuc" required>
             <Select
-              placeholder="Chọn danh mục"
+              placeholder="Chọn loại công văn"
               onChange={(value) => handleAddInputChange(value, 'danhmuc')}
               required
             >
@@ -249,8 +268,8 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
                 onChange={(value) => handleAddInputChange(value, 'chude')}
                 required
               >
-                {availableTopics.map((topic, index) => (
-                  <Option key={index} value={topic}>{topic}</Option>
+                {availableTopics.map((topicName, index) => (
+                  <Option key={index} value={topicName}>{topicName}</Option>
                 ))}
               </Select>
             </Form.Item>
@@ -286,6 +305,7 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
       <Table
         columns={columns}
         dataSource={users}
+        pagination={false}
         rowKey="_id"
       />
       <Modal
@@ -295,7 +315,7 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
         onCancel={handleCancelClick}
       >
         <Form>
-          <Form.Item label="Danh mục" required>
+          <Form.Item label="Loại công văn" required>
             <Select
               value={editingUser?.danhmuc?._id}
               onChange={(value) => handleInputChange(value, 'danhmuc')}
@@ -309,13 +329,13 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
           {editingAvailableTopics.length > 0 && (
             <Form.Item label="Chủ đề" required>
               <Select
-                mode="multiple" // Cho phép chọn nhiều chủ đề
+                mode="multiple"
                 value={editingUser?.chude}
                 onChange={(value) => handleInputChange(value, 'chude')}
                 required
               >
-                {editingAvailableTopics.map((topic, index) => (
-                  <Option key={index} value={topic}>{topic}</Option>
+                {editingAvailableTopics.map((topicName, index) => (
+                  <Option key={index} value={topicName}>{topicName}</Option>
                 ))}
               </Select>
             </Form.Item>

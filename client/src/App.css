@@ -36,3 +36,29 @@
     transform: rotate(360deg);
   }
 }
+.content-background {
+  background-image: url('./assets/images/logo.png'); /* Đường dẫn đến hình nền */
+  background-size: contain; /* Hoặc 'contain' tùy vào cách bạn muốn hiển thị */
+  background-repeat: no-repeat;
+  background-position: center;
+  height: 100%; /* Đảm bảo chiều cao đầy đủ */
+  width: 100%;
+}
+
+.demo-logo-vertical {
+  height: 40px;
+  /* background: rgba(255, 255, 255, 0.2); */
+  margin: 16px;
+}
+
+.ant-layout-sider {
+  position: sticky; /* Đặt vị trí sticky */
+  top: 0; /* Ghi rõ vị trí bắt đầu dính */
+  height: 100vh; /* Đặt chiều cao của sidebar */
+}
+.logo-text {
+  color: white; /* Chữ màu trắng */
+  margin-left: 10px; /* Khoảng cách giữa logo và chữ */
+  font-size: 24px; /* Kích thước chữ */
+  
+}
