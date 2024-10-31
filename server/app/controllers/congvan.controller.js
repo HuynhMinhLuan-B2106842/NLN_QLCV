@@ -1,5 +1,6 @@
 const CongVan = require('../models/congvan');
 const DanhMuc = require('../models/danhmuc');
+const Khoa = require('../models/khoa');
 const multer = require('multer');
 
 // Cấu hình multer để upload file
@@ -11,13 +12,18 @@ const checkDanhMucExists = async (danhMucId) => {
     if (!danhMuc) throw new Error('Danh mục không tồn tại');
     return danhMuc;
 };
-
+// Kiểm tra khoa tồn tại
+const checkKhoaExists = async (khoaId) => {
+    const khoa = await Khoa.findById(khoaId);
+    if (!khoa) throw new Error('Khoa không tồn tại');
+    return khoa;
+}
 // Tạo mới công văn
 exports.createCongVan = async (req, res) => {
     try {
         // Kiểm tra danh mục tồn tại
         const danhMuc = await checkDanhMucExists(req.body.danhmuc);
-
+        const khoa = await checkKhoaExists(req.body.khoa);
         // Xử lý mảng chủ đề
         let chudeArray;
 
@@ -56,7 +62,8 @@ exports.createCongVan = async (req, res) => {
             sotrang: req.body.sotrang,
             filecv: req.file ? req.file.path : null, // Lưu đường dẫn file nếu có file đính kèm
             danhmuc: req.body.danhmuc,
-            chude: chudeArray // Lưu danh sách chủ đề được chọn
+            chude: chudeArray, // Lưu danh sách chủ đề được chọn
+            khoa: req.body.khoa
         });
 
         // Lưu công văn mới
@@ -73,6 +80,7 @@ exports.getAllCongVan = async (req, res) => {
     try {
         const congvanList = await CongVan.find()
             .populate('danhmuc', 'ten_DM') // Lấy tên danh mục
+            .populate('khoa', 'ten_K')
             .select('ngaybanhanh ngayhethieuluc sokihieu noidung nguoilienquan sotrang filecv chude');
         res.json(congvanList);
     } catch (error) {
@@ -85,6 +93,7 @@ exports.getCongVanById = async (req, res) => {
     try {
         const congvan = await CongVan.findById(req.params.id)
             .populate('danhmuc', 'ten_DM') // Lấy tên danh mục
+            .populate('khoa', 'ten_K')
             .select('ngaybanhanh ngayhethieuluc sokihieu noidung nguoilienquan sotrang filecv chude');
         if (!congvan) return res.status(404).json({ message: 'Công văn không tồn tại' });
         res.json(congvan);
@@ -98,6 +107,7 @@ exports.updateCongVan = async (req, res) => {
     try {
         const congvan = await CongVan.findById(req.params.id);
         if (!congvan) return res.status(404).json({ message: 'Công văn không tồn tại' });
+
 
         if (req.body.danhmuc) {
             const danhMuc = await checkDanhMucExists(req.body.danhmuc);
@@ -131,7 +141,11 @@ exports.updateCongVan = async (req, res) => {
             congvan.danhmuc = req.body.danhmuc;
             congvan.chude = chudeArray; // Cập nhật chủ đề
         }
-
+        if (req.body.khoa) {
+            const khoa = await Khoa.findById(req.body.khoa);
+            if (!khoa) return res.status(404).json({ message: 'Khoa không tồn tại' });
+            congvan.khoa = req.body.khoa; // Cập nhật khoa
+        }
         // Cập nhật các trường khác
         congvan.ngaybanhanh = req.body.ngaybanhanh || congvan.ngaybanhanh;
         congvan.ngayhethieuluc = req.body.ngayhethieuluc || congvan.ngayhethieuluc;
@@ -203,14 +217,14 @@ exports.thongkeCongvan = async (req, res) => {
         res.status(500).send('Lỗi server');
     }
 };
-// Tìm kiếm công văn theo từ khóa trong mảng chuDe.tuKhoa
+// Tìm kiếm công văn 
 exports.searchCongVanByKeyword = async (req, res) => {
     try {
-        const keyword = decodeURIComponent(req.query.keyword || '');  // Từ khóa tìm kiếm được truyền qua query params
+        const keyword = decodeURIComponent(req.query.keyword || '');  
 
         // Tìm danh mục có chủ đề chứa từ khóa trong tuKhoa
         const danhMucList = await DanhMuc.find({
-            'chuDe.tuKhoa': { $regex: keyword, $options: 'i' }  // Tìm kiếm không phân biệt chữ hoa chữ thường
+            'chuDe.tuKhoa': { $regex: keyword, $options: 'i' } 
         });
 
         // Lấy tất cả các chủ đề có chứa từ khóa trong tuKhoa từ danh mục đã tìm được
@@ -224,13 +238,15 @@ exports.searchCongVanByKeyword = async (req, res) => {
         // Tìm kiếm công văn không chỉ dựa trên chủ đề mà còn các trường khác
         const congvanList = await CongVan.find({
             $or: [
-                { chude: { $in: chuDeNames } },  // Tìm theo tên chủ đề
-                { sokihieu: { $regex: keyword, $options: 'i' } },  // Tìm theo số ký hiệu
-                { noidung: { $regex: keyword, $options: 'i' } },  // Tìm theo nội dung
-                { nguoilienquan: { $regex: keyword, $options: 'i' } },  // Tìm theo người liên quan
+                { chude: { $in: chuDeNames } },
+                { sokihieu: { $regex: keyword, $options: 'i' } },  
+                { noidung: { $regex: keyword, $options: 'i' } },  
+                { nguoilienquan: { $regex: keyword, $options: 'i' } },  
+                
             ]
         })
-        .populate('danhmuc', 'ten_DM')  // Lấy tên danh mục
+        .populate('danhmuc', 'ten_DM')  
+        .populate('khoa', 'ten_K')
         .select('ngaybanhanh ngayhethieuluc sokihieu noidung nguoilienquan sotrang filecv chude');
 
         // Nếu không tìm thấy công văn nào phù hợp

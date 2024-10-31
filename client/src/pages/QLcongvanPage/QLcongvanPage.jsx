@@ -20,6 +20,7 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
   const location = useLocation();
   const [users, setUsers] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [deparments, setdeparments] = useState([]);
   const [editingIndex, setEditingIndex] = useState(-1);
   const [editingUser, setEditingUser] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -33,6 +34,7 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
     filecv: null,
     danhmuc: '',
     chude: [],
+    khoa: '',
   });
   const [newFile, setNewFile] = useState(null);
   const [availableTopics, setAvailableTopics] = useState([]);
@@ -44,6 +46,7 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
     }
     fetchUsers();
     fetchCategories();
+    fetchdeparments();
   }, [location, setBreadcrumb]);
 
   const fetchUsers = () => {
@@ -57,7 +60,11 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
       .then(response => setCategories(response.data))
       .catch(err => console.error('Lỗi khi lấy danh mục:', err));
   };
-
+  const fetchdeparments = () => {
+    axios.get('http://localhost:5000/api/khoa')
+      .then(response => setdeparments(response.data))
+      .catch(err => console.error('Lỗi khi lấy khoa:', err));
+  };
   const handleEditClick = (index) => {
     setEditingIndex(index);
     setEditingUser({ ...users[index] });
@@ -172,6 +179,7 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
           filecv: null,
           danhmuc: '',
           chude: [],
+          khoa: '',
         });
         setAvailableTopics([]);
         setNewFile(null); // Reset file
@@ -216,6 +224,11 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
       title: 'Người liên quan',
       dataIndex: 'nguoilienquan',
     },
+    {
+      title: 'Nơi liên quan',
+      dataIndex: 'khoa',
+      render: (text, record) => record.khoa ? record.khoa.ten_K : 'Không có',
+    },    
     {
       title: 'Số trang',
       dataIndex: 'sotrang',
@@ -274,6 +287,17 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
               </Select>
             </Form.Item>
           )}
+            <Form.Item label="Nơi liên quan" name="khoa" required>
+            <Select
+              placeholder="Chọn nơi liên quan"
+              onChange={(value) => handleAddInputChange(value, 'khoa')}
+              required
+            >
+              {deparments.map(deparment => (
+                <Option key={deparment._id} value={deparment._id}>{deparment.ten_K}</Option>
+              ))}
+            </Select>
+          </Form.Item>
           <Form.Item label="Ngày ban hành" name="ngaybanhanh" required>
             <DatePicker onChange={(date, dateString) => handleAddInputChange(dateString, 'ngaybanhanh')} />
           </Form.Item>
@@ -340,6 +364,17 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
               </Select>
             </Form.Item>
           )}
+          <Form.Item label="Nơi liên quan" required>
+            <Select
+              value={editingUser?.khoa?._id}
+              onChange={(value) => handleInputChange(value, 'khoa')}
+              required
+            >
+              {deparments.map(deparment => (
+                <Option key={deparment._id} value={deparment._id}>{deparment.ten_K}</Option>
+              ))}
+            </Select>
+          </Form.Item>
           <Form.Item label="Ngày ban hành" required>
             <DatePicker
               value={editingUser?.ngaybanhanh ? moment(editingUser.ngaybanhanh) : null}

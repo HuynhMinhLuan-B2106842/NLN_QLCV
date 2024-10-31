@@ -86,6 +86,11 @@ const CongVandenPage = ({ setBreadcrumb }) => {
             dataIndex: 'nguoilienquan',
         },
         {
+            title: 'Nơi liên quan',
+            dataIndex: 'khoa',
+            render: (text, record) => (record.khoa ? record.khoa.ten_K : 'Không có'),
+        },        
+        {
             title: 'Số trang',
             dataIndex: 'sotrang',
         },

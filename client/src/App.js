@@ -43,7 +43,7 @@ const App = () => {
     getItem('Quản Lí Công Văn', 'sub3', <FileAddOutlined />, [
       getItem('Quản Lí Công văn', '9', null, null, () => handleMenuClick('/QLCongvan', 'Quản Lí Công văn')),
     ]),
-    getItem('Files', '11', <FileOutlined />, null, () => handleMenuClick('/files', 'Files')),
+   // getItem('Files', '11', <FileOutlined />, null, () => handleMenuClick('/files', 'Files')),
   ];
 
   return (

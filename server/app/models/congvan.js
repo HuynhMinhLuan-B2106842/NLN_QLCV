@@ -39,6 +39,11 @@ const congvanSchema = new mongoose.Schema({
         type: String,
         required: true
     }],
+    khoa: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'khoa',  // Tham chiếu đến model danhmuc
+        required: true
+    },
     // loaicongvan: {
     //     type: mongoose.Schema.Types.ObjectId,
     //     ref: 'loaicongvan',  // Tham chiếu đến model loaicongvan
