@@ -49,7 +49,7 @@ exports.updateLoaiCongVan = async (req, res) => {
 // Xóa một loại công văn
 exports.deleteLoaiCongVan = async (req, res) => {
     try {
-        const loaiCongVan = await LoaiCongVan.findById(req.params.id);
+        const loaiCongVan = await LoaiCongVan.findByIdAndDelete(req.params.id);
         if (!loaiCongVan) return res.status(404).json({ message: 'Loại công văn không tồn tại' });
 
         //await loaiCongVan.remove();

@@ -1,132 +1,118 @@
-// src/pages/CongvanPage/CongvandenPage.jsx
-
-import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, Space, Spin, message } from 'antd';
-import { useLocation } from 'react-router-dom';
 import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { format } from 'date-fns';
+import { Table, Input } from 'antd';
 
-const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN'); // Định dạng ngày theo kiểu Việt Nam
+const CongvannoiboPage = ({ setBreadcrumb }) => {
+  const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    setBreadcrumb && setBreadcrumb('Quản lí công văn nội bộ');
+    fetchUsers();
+  }, [setBreadcrumb]);
+
+  const fetchUsers = () => {
+    axios.get('http://localhost:5000/api/congvan')
+      .then(response => {
+        const filteredData = response.data.filter(cv => cv.loaicongvan && cv.loaicongvan.ten_LCV === "Công văn nội bộ");
+        setUsers(filteredData);
+        setFilteredUsers(filteredData);
+      })
+      .catch(err => console.error('Lỗi khi lấy dữ liệu:', err));
+  };
+
+  const formatDate = (dateString) => {
+    return format(new Date(dateString), 'dd/MM/yyyy');
+  };
+
+  const handleSearch = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchTerm(value);
+
+    const filteredData = users.filter((cv) => {
+      const matchLoaiCongVan = cv.loaicongvan?.ten_LCV.toLowerCase().includes(value);
+      const matchSoKiHieu = cv.sokihieu?.toLowerCase().includes(value);
+      const matchNoiDung = cv.noidung?.toLowerCase().includes(value);
+      const matchNguoiLienQuan = cv.nguoilienquan?.toLowerCase().includes(value);
+      const matchKhoa = cv.khoa?.ten_K.toLowerCase().includes(value);
+      const matchChuDe = cv.chude?.some(cd => cd.ten_CD.toLowerCase().includes(value));
+
+      return (
+        matchLoaiCongVan ||
+        matchSoKiHieu ||
+        matchNoiDung ||
+        matchNguoiLienQuan ||
+        matchKhoa ||
+        matchChuDe
+      );
+    });
+    setFilteredUsers(filteredData);
+  };
+
+  const columns = [
+    {
+      title: 'Loại công văn',
+      dataIndex: 'loaicongvan',
+      render: (text, record) => record.loaicongvan ? record.loaicongvan.ten_LCV : 'Không có',
+    },
+    {
+      title: 'Chủ đề',
+      dataIndex: 'chude',
+      render: (text, record) => record.chude ? record.chude.map(cd => cd.ten_CD).join(', ') : 'Không có',
+    },
+    {
+      title: 'Ngày ban hành',
+      dataIndex: 'ngaybanhanh',
+      render: text => formatDate(text),
+    },
+    {
+      title: 'Ngày hết hiệu lực',
+      dataIndex: 'ngayhethieuluc',
+      render: text => formatDate(text),
+    },
+    {
+      title: 'Số hiệu',
+      dataIndex: 'sokihieu',
+    },
+    {
+      title: 'Nội dung',
+      dataIndex: 'noidung',
+    },
+    {
+      title: 'Người liên quan',
+      dataIndex: 'nguoilienquan',
+    },
+    {
+      title: 'Nơi liên quan',
+      dataIndex: 'khoa',
+      render: (text, record) => record.khoa ? record.khoa.ten_K : 'Không có',
+    },
+    {
+      title: 'Số trang',
+      dataIndex: 'sotrang',
+    },
+    {
+      title: 'Tập tin',
+      dataIndex: 'filecv',
+      render: (text) => text ? (
+        <a href={`http://localhost:5000/${text}`} target="_blank" rel="noopener noreferrer">Xem</a>
+      ) : 'Không có',
+    },
+  ];
+
+  return (
+    <div className="container">
+      <Input
+        placeholder="Tìm kiếm công văn..."
+        value={searchTerm}
+        onChange={handleSearch}
+        style={{ marginBottom: 16 }}
+      />
+      <Table dataSource={filteredUsers} columns={columns} rowKey="_id" />
+    </div>
+  );
 };
 
-const CongVannoiboPage = ({ setBreadcrumb }) => {
-  const location = useLocation();
-    const [congvanList, setCongVanList] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [keyword, setKeyword] = useState('');
-
-    // Hàm để lấy danh sách công văn
-    const fetchCongVan = async (searchKeyword = '') => {
-        setLoading(true);
-        try {
-            const keyword = encodeURIComponent(searchKeyword);
-            const response = await axios.get('http://localhost:5000/api/congvan/search/search', {
-              params: { keyword }, // Gửi từ khóa tìm kiếm
-            });
-
-            // Lọc danh sách công văn theo danh mục
-            const filteredCongVanList = response.data.filter(congVan => {
-                return congVan.danhmuc && congVan.danhmuc.ten_DM === 'Công văn nội bộ';
-            });
-
-            setCongVanList(filteredCongVanList);
-        } catch (error) {
-            message.error('Có lỗi xảy ra khi lấy danh sách công văn');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Sử dụng useEffect để gọi hàm fetchCongVan khi component được render
-    useEffect(() => {
-      if (location.pathname === '/Congvannoibo') {
-        setBreadcrumb('Công văn nội bộ');
-      }
-      fetchCongVan();
-    }, [location, setBreadcrumb]);
-    // Hàm để tìm kiếm công văn
-    const handleSearch = () => {
-        fetchCongVan(keyword);
-    };
-
-    // Cấu hình cho table
-    const columns = [
-        {
-            title: 'Loại công văn',
-            dataIndex: 'danhmuc',
-            render: (text, record) => (record.danhmuc ? record.danhmuc.ten_DM : 'Không có'),
-        },
-        {
-            title: 'Chủ đề',
-            dataIndex: 'chude',
-            render: text => text.join(', ') || 'Không có',
-        },
-        {
-            title: 'Ngày ban hành',
-            dataIndex: 'ngaybanhanh',
-            render: (text) => formatDate(text),
-        },
-        {
-            title: 'Ngày hết hiệu lực',
-            dataIndex: 'ngayhethieuluc',
-            render: (text) => formatDate(text),
-        },
-        {
-            title: 'Số ký hiệu',
-            dataIndex: 'sokihieu',
-        },
-        {
-            title: 'Nội dung',
-            dataIndex: 'noidung',
-        },
-        {
-            title: 'Người liên quan',
-            dataIndex: 'nguoilienquan',
-        },
-        {
-            title: 'Nơi liên quan',
-            dataIndex: 'khoa',
-            render: (text, record) => (record.khoa ? record.khoa.ten_K : 'Không có'),
-        }, 
-        {
-            title: 'Số trang',
-            dataIndex: 'sotrang',
-        },
-        {
-            title: 'Tập tin',
-            dataIndex: 'filecv',
-            render: (text) => (
-                text ? (
-                    <a href={`http://localhost:5000/${text}`} target="_blank" rel="noopener noreferrer">Xem</a>
-                ) : 'Không có'
-            ),
-        },
-    ];
-
-    return (
-        <div>
-            <h1>Danh sách Công Văn</h1>
-            <Space style={{ marginBottom: 16 }}>
-                <Input
-                    placeholder="Nhập từ khóa"
-                    value={keyword}
-                    onChange={(e) => setKeyword(e.target.value)}
-                />
-                <Button type="primary" onClick={handleSearch}>Tìm kiếm</Button>
-            </Space>
-            {loading ? (
-                <Spin />
-            ) : (
-                <Table
-                    dataSource={congvanList}
-                    columns={columns}
-                    rowKey="_id" // Sử dụng _id làm khóa cho mỗi hàng
-                />
-            )}
-        </div>
-    );
-};
-
-export default CongVannoiboPage;
+export default CongvannoiboPage;

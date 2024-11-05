@@ -2,6 +2,7 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { format } from 'date-fns';
+import moment from 'moment';
 import {
   Button,
   Form,
@@ -12,15 +13,15 @@ import {
   Upload,
   DatePicker,
 } from 'antd';
-import moment from 'moment';
 
 const { Option } = Select;
 
 const QLCongvanPage = ({ setBreadcrumb }) => {
   const location = useLocation();
   const [users, setUsers] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [deparments, setdeparments] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [chudes, setChudes] = useState([]);
+  const [loaicongvans, setLoaiCongvans] = useState([]);
   const [editingIndex, setEditingIndex] = useState(-1);
   const [editingUser, setEditingUser] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -32,21 +33,21 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
     nguoilienquan: '',
     sotrang: '',
     filecv: null,
-    danhmuc: '',
-    chude: [],
     khoa: '',
+    chude: [], // Mảng chủ đề
+    loaicongvan: '',
   });
   const [newFile, setNewFile] = useState(null);
-  const [availableTopics, setAvailableTopics] = useState([]);
-  const [editingAvailableTopics, setEditingAvailableTopics] = useState([]);
+  const [newChude, setNewChude] = useState(''); // State for the new topic input
 
   useEffect(() => {
     if (location.pathname === '/QLCongvan') {
       setBreadcrumb('Quản lí công văn');
     }
     fetchUsers();
-    fetchCategories();
-    fetchdeparments();
+    fetchDepartments();
+    fetchChudes();
+    fetchLoaiCongvans();
   }, [location, setBreadcrumb]);
 
   const fetchUsers = () => {
@@ -55,46 +56,49 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
       .catch(err => console.error('Lỗi khi lấy dữ liệu:', err));
   };
 
-  const fetchCategories = () => {
-    axios.get('http://localhost:5000/api/danhmuc')
-      .then(response => setCategories(response.data))
-      .catch(err => console.error('Lỗi khi lấy danh mục:', err));
-  };
-  const fetchdeparments = () => {
+  const fetchDepartments = () => {
     axios.get('http://localhost:5000/api/khoa')
-      .then(response => setdeparments(response.data))
+      .then(response => setDepartments(response.data))
       .catch(err => console.error('Lỗi khi lấy khoa:', err));
   };
+  
+  const fetchChudes = () => {
+    axios.get('http://localhost:5000/api/chude')
+      .then(response => setChudes(response.data))
+      .catch(err => console.error('Lỗi khi lấy chủ đề:', err));
+  };
+
+  const fetchLoaiCongvans = () => {
+    axios.get('http://localhost:5000/api/loaicongvan')
+      .then(response => setLoaiCongvans(response.data))
+      .catch(err => console.error('Lỗi khi lấy loại công văn:', err));
+  };
+
   const handleEditClick = (index) => {
     setEditingIndex(index);
     setEditingUser({ ...users[index] });
-
-    const selectedCategory = categories.find(category => category._id === users[index].danhmuc._id);
-    // Trích xuất tên chủ đề
-    setEditingAvailableTopics(selectedCategory ? selectedCategory.chuDe.map(topic => topic.ten) : []);
   };
 
   const handleInputChange = (value, field) => {
+    console.log(editingUser)
     setEditingUser({ ...editingUser, [field]: value });
-
-    if (field === 'danhmuc') {
-      const selectedCategory = categories.find(category => category._id === value);
-      // Trích xuất tên chủ đề
-      setEditingAvailableTopics(selectedCategory ? selectedCategory.chuDe.map(topic => topic.ten) : []);
-      setEditingUser(prevState => ({ ...prevState, chude: [] })); // Reset chude
-    }
   };
 
   const handleSaveClick = () => {
     const formData = new FormData();
-    // Chuyển đổi các trường thành chuỗi (nếu cần)
     Object.keys(editingUser).forEach(key => {
-      if (key === 'chude' || key === 'ngaybanhanh' || key === 'ngayhethieuluc') {
+      if (key === 'ngaybanhanh' || key === 'ngayhethieuluc') {
         formData.append(key, JSON.stringify(editingUser[key]));
       } else {
         formData.append(key, editingUser[key]);
       }
     });
+      // Thêm chủ đề vào formData
+  if (editingUser.chude && editingUser.chude.length > 0) {
+    editingUser.chude.forEach(chude => {
+      formData.append('chude[]', chude); // Đảm bảo gửi chủ đề dưới dạng mảng
+    });
+  }
     if (newFile) {
       formData.append('filecv', newFile);
     }
@@ -105,7 +109,6 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
         setEditingIndex(-1);
         setEditingUser(null);
         setNewFile(null);
-        setEditingAvailableTopics([]);
       })
       .catch(err => console.error('Lỗi khi cập nhật:', err));
   };
@@ -114,7 +117,6 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
     setEditingIndex(-1);
     setEditingUser(null);
     setNewFile(null);
-    setEditingAvailableTopics([]);
   };
 
   const handleDeleteClick = (id) => {
@@ -129,41 +131,34 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
 
   const handleAddClick = () => {
     setShowAddForm(true);
-    setAvailableTopics([]);
   };
 
   const handleAddInputChange = (value, field) => {
     setNewCongVan({ ...newCongVan, [field]: value });
-
-    if (field === 'danhmuc') {
-      const selectedCategory = categories.find(category => category._id === value);
-      // Trích xuất tên chủ đề
-      setAvailableTopics(selectedCategory ? selectedCategory.chuDe.map(topic => topic.ten) : []);
-      setNewCongVan(prevState => ({ ...prevState, chude: [] })); // Reset chude
-    }
   };
 
   const handleAddFileChange = (file) => {
     setNewFile(file);
     setNewCongVan({ ...newCongVan, filecv: file });
-    return false; // để tránh upload tự động
+    return false;
+  };
+
+  const handleAddChude = (e) => {
+    if (e.key === 'Enter' && newChude.trim()) {
+      // Add the new topic to the chude array
+      setNewCongVan(prev => ({
+        ...prev,
+        chude: [...prev.chude, newChude.trim()]
+      }));
+      setNewChude(''); // Clear the input
+    }
   };
 
   const handleAddSubmit = (values) => {
-    console.log('Submitting new Cong Van:', newCongVan);
     const formData = new FormData();
-    // Chuyển đổi các trường thành chuỗi (nếu cần)
     Object.keys(newCongVan).forEach(key => {
-      if (key === 'chude') {
-        formData.append(key, JSON.stringify(newCongVan[key]));
-      } else {
-        formData.append(key, newCongVan[key]);
-      }
+      formData.append(key, newCongVan[key]);
     });
-
-    for (const [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
-    }
 
     axios.post('http://localhost:5000/api/congvan', formData)
       .then(response => {
@@ -177,12 +172,11 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
           nguoilienquan: '',
           sotrang: '',
           filecv: null,
-          danhmuc: '',
-          chude: [],
           khoa: '',
+          chude: [], // Reset mảng chủ đề
+          loaicongvan: '',
         });
-        setAvailableTopics([]);
-        setNewFile(null); // Reset file
+        setNewFile(null);
       })
       .catch(err => console.error('Lỗi khi thêm công văn:', err));
   };
@@ -194,13 +188,13 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
   const columns = [
     {
       title: 'Loại công văn',
-      dataIndex: 'danhmuc',
-      render: (text, record) => record.danhmuc ? record.danhmuc.ten_DM : 'Không có',
+      dataIndex: 'loaicongvan',
+      render: (text, record) => record.loaicongvan ? record.loaicongvan.ten_LCV : 'Không có',
     },
     {
       title: 'Chủ đề',
       dataIndex: 'chude',
-      render: text => text.join(', ') || 'Không có',
+      render: (text, record) => record.chude ? record.chude.map(cd => cd.ten_CD).join(', ') : 'Không có', // Hiển thị nhiều chủ đề
     },
     {
       title: 'Ngày ban hành',
@@ -228,7 +222,7 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
       title: 'Nơi liên quan',
       dataIndex: 'khoa',
       render: (text, record) => record.khoa ? record.khoa.ten_K : 'Không có',
-    },    
+    },
     {
       title: 'Số trang',
       dataIndex: 'sotrang',
@@ -261,77 +255,83 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
         onCancel={() => setShowAddForm(false)}
       >
         <Form onFinish={handleAddSubmit}>
-          <Form.Item label="Loại công văn" name="danhmuc" required>
-            <Select
-              placeholder="Chọn loại công văn"
-              onChange={(value) => handleAddInputChange(value, 'danhmuc')}
-              required
-            >
-              {categories.map(category => (
-                <Option key={category._id} value={category._id}>{category.ten_DM}</Option>
-              ))}
-            </Select>
-          </Form.Item>
-          {availableTopics.length > 0 && (
-            <Form.Item label="Chủ đề" name="chude" required>
-              <Select
-                mode="multiple"
-                placeholder="Chọn chủ đề"
-                value={newCongVan.chude}
-                onChange={(value) => handleAddInputChange(value, 'chude')}
-                required
-              >
-                {availableTopics.map((topicName, index) => (
-                  <Option key={index} value={topicName}>{topicName}</Option>
-                ))}
-              </Select>
-            </Form.Item>
-          )}
-            <Form.Item label="Nơi liên quan" name="khoa" required>
+          <Form.Item label="Nơi liên quan" name="khoa" required>
             <Select
               placeholder="Chọn nơi liên quan"
               onChange={(value) => handleAddInputChange(value, 'khoa')}
               required
             >
-              {deparments.map(deparment => (
-                <Option key={deparment._id} value={deparment._id}>{deparment.ten_K}</Option>
+              {departments.map(department => (
+                <Option key={department._id} value={department._id}>{department.ten_K}</Option>
               ))}
             </Select>
           </Form.Item>
-          <Form.Item label="Ngày ban hành" name="ngaybanhanh" required>
-            <DatePicker onChange={(date, dateString) => handleAddInputChange(dateString, 'ngaybanhanh')} />
+
+          <Form.Item label="Loại công văn" name="loaicongvan" required>
+            <Select
+              placeholder="Chọn loại công văn"
+              onChange={(value) => handleAddInputChange(value, 'loaicongvan')}
+              required
+            >
+              {loaicongvans.map(loai => (
+                <Option key={loai._id} value={loai._id}>{loai.ten_LCV}</Option>
+              ))}
+            </Select>
           </Form.Item>
-          <Form.Item label="Ngày hết hiệu lực" name="ngayhethieuluc" required>
-            <DatePicker onChange={(date, dateString) => handleAddInputChange(dateString, 'ngayhethieuluc')} />
+
+          <Form.Item label="Chủ đề" required>
+            <Select
+              mode="tags" // Cho phép nhập chủ đề mới
+              value={newCongVan.chude} // Sử dụng trạng thái của chủ đề
+              onChange={(value) => handleAddInputChange(value, 'chude')} // Cập nhật khi có thay đổi
+              placeholder="Nhập chủ đề và chọn hoặc nhấn Enter"
+              tokenSeparators={[',']} // Cho phép tách chủ đề bằng dấu phẩy
+            >
+              {chudes.map((topic) => (
+                <Option key={topic._id} value={topic.ten_CD}>{topic.ten_CD}</Option>
+              ))}
+            </Select>
           </Form.Item>
+
+
           <Form.Item label="Số hiệu" name="sokihieu" required>
-            <Input onChange={(e) => handleAddInputChange(e.target.value, 'sokihieu')} />
+            <Input onChange={(e) => handleAddInputChange(e.target.value, 'sokihieu')} required />
           </Form.Item>
+
           <Form.Item label="Nội dung" name="noidung" required>
-            <Input.TextArea onChange={(e) => handleAddInputChange(e.target.value, 'noidung')} />
+            <Input.TextArea onChange={(e) => handleAddInputChange(e.target.value, 'noidung')} required />
           </Form.Item>
+
           <Form.Item label="Người liên quan" name="nguoilienquan" required>
-            <Input onChange={(e) => handleAddInputChange(e.target.value, 'nguoilienquan')} />
+            <Input onChange={(e) => handleAddInputChange(e.target.value, 'nguoilienquan')} required />
           </Form.Item>
+
           <Form.Item label="Số trang" name="sotrang" required>
-            <Input onChange={(e) => handleAddInputChange(e.target.value, 'sotrang')} />
+            <Input type="number" onChange={(e) => handleAddInputChange(e.target.value, 'sotrang')} required />
           </Form.Item>
+
+          <Form.Item label="Ngày ban hành" name="ngaybanhanh" required>
+            <DatePicker onChange={(date) => handleAddInputChange(date, 'ngaybanhanh')} required />
+          </Form.Item>
+
+          <Form.Item label="Ngày hết hiệu lực" name="ngayhethieuluc" required>
+            <DatePicker onChange={(date) => handleAddInputChange(date, 'ngayhethieuluc')} required />
+          </Form.Item>
+
           <Form.Item label="Tập tin" name="filecv">
             <Upload beforeUpload={handleAddFileChange} showUploadList={false}>
               <Button>Chọn tập tin</Button>
             </Upload>
           </Form.Item>
+
           <Form.Item>
             <Button type="primary" htmlType="submit">Thêm</Button>
           </Form.Item>
         </Form>
       </Modal>
-      <Table
-        columns={columns}
-        dataSource={users}
-        pagination={false}
-        rowKey="_id"
-      />
+
+      <Table dataSource={users} columns={columns} rowKey="_id" />
+      
       <Modal
         title="Chỉnh sửa công văn"
         open={editingIndex !== -1}
@@ -339,39 +339,38 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
         onCancel={handleCancelClick}
       >
         <Form>
-          <Form.Item label="Loại công văn" required>
-            <Select
-              value={editingUser?.danhmuc?._id}
-              onChange={(value) => handleInputChange(value, 'danhmuc')}
-              required
-            >
-              {categories.map(category => (
-                <Option key={category._id} value={category._id}>{category.ten_DM}</Option>
-              ))}
-            </Select>
-          </Form.Item>
-          {editingAvailableTopics.length > 0 && (
-            <Form.Item label="Chủ đề" required>
-              <Select
-                mode="multiple"
-                value={editingUser?.chude}
-                onChange={(value) => handleInputChange(value, 'chude')}
-                required
-              >
-                {editingAvailableTopics.map((topicName, index) => (
-                  <Option key={index} value={topicName}>{topicName}</Option>
-                ))}
-              </Select>
-            </Form.Item>
-          )}
           <Form.Item label="Nơi liên quan" required>
             <Select
               value={editingUser?.khoa?._id}
               onChange={(value) => handleInputChange(value, 'khoa')}
               required
             >
-              {deparments.map(deparment => (
+              {departments.map(deparment => (
                 <Option key={deparment._id} value={deparment._id}>{deparment.ten_K}</Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item label="loại công văn" required>
+            <Select
+              value={editingUser?.loaicongvan?._id}
+              onChange={(value) => handleInputChange(value, 'loaicongvan')}
+              required
+            >
+              {loaicongvans.map(loaicongvan => (
+                <Option key={loaicongvan._id} value={loaicongvan._id}>{loaicongvan.ten_LCV}</Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item label="Chủ đề" required>
+            <Select
+              mode="tags" // Cho phép nhập chủ đề mới
+              value={editingUser?.chude?._id} // Sử dụng trạng thái của chủ đề
+              onChange={(value) => handleInputChange(value, 'chude')} // Cập nhật khi có thay đổi
+              placeholder="Nhập chủ đề và chọn hoặc nhấn Enter"
+              tokenSeparators={[',']} // Cho phép tách chủ đề bằng dấu phẩy
+            >
+              {chudes.map((topic) => (
+                <Option key={topic._id} value={topic.ten_CD}>{topic.ten_CD}</Option>
               ))}
             </Select>
           </Form.Item>

@@ -1,57 +1,61 @@
 const CongVan = require('../models/congvan');
-const DanhMuc = require('../models/danhmuc');
 const Khoa = require('../models/khoa');
+const ChuDe = require('../models/chude');
+const LoaiCongVan = require('../models/loaicongvan');
 const multer = require('multer');
 
 // Cấu hình multer để upload file
-const upload = multer({ dest: 'uploads/' }); // Bạn có thể thay đổi đường dẫn và cấu hình thêm nếu cần
+const upload = multer({ dest: 'uploads/' });
 
-// Kiểm tra danh mục tồn tại
-const checkDanhMucExists = async (danhMucId) => {
-    const danhMuc = await DanhMuc.findById(danhMucId);
-    if (!danhMuc) throw new Error('Danh mục không tồn tại');
-    return danhMuc;
-};
 // Kiểm tra khoa tồn tại
 const checkKhoaExists = async (khoaId) => {
     const khoa = await Khoa.findById(khoaId);
     if (!khoa) throw new Error('Khoa không tồn tại');
     return khoa;
-}
-// Tạo mới công văn
+};
+const checkChuDeExists = async (chudeId) => {
+    const chude = await ChuDe.findById(chudeId);
+    if (!chude) throw new Error('Chủ đề không tồn tại');
+    return chude;
+};
+// Kiểm tra loại công văn tồn tại
+const checkLoaiCongVanExists = async (loaicongvanId) => {
+    const loaicongvan = await LoaiCongVan.findById(loaicongvanId);
+    if (!loaicongvan) throw new Error('Loại công văn không tồn tại');
+    return loaicongvan;
+};
+
 exports.createCongVan = async (req, res) => {
     try {
-        // Kiểm tra danh mục tồn tại
-        const danhMuc = await checkDanhMucExists(req.body.danhmuc);
-        const khoa = await checkKhoaExists(req.body.khoa);
-        // Xử lý mảng chủ đề
-        let chudeArray;
+        // Kiểm tra khoa và loại công văn tồn tại
+        await checkKhoaExists(req.body.khoa);
+        await checkLoaiCongVanExists(req.body.loaicongvan);
 
-        // Nếu req.body.chude là một chuỗi JSON, chuyển đổi nó thành mảng
-        if (typeof req.body.chude === 'string') {
-            try {
-                chudeArray = JSON.parse(req.body.chude);
-            } catch (error) {
-                throw new Error('Dữ liệu chủ đề không hợp lệ');
-            }
-        } else if (Array.isArray(req.body.chude)) {
-            chudeArray = req.body.chude;
-        } else {
-            throw new Error('Dữ liệu chủ đề không hợp lệ');
-        }
-        
-        // Kiểm tra từng chủ đề có nằm trong danh mục không
-        const danhMucChuDeTenArray = danhMuc.chuDe.map(cd => cd.ten);
-        for (const chude of chudeArray) {
-            if (!danhMucChuDeTenArray.includes(chude)) {
-                throw new Error(`Chủ đề "${chude}" không tồn tại trong danh mục này`);
-            }
-        }
-        
-        console.log(chudeArray);
-        console.log(danhMuc.chuDe);
-        
+        const chudeIds = []; // Mảng lưu ID chủ đề
 
+        // Kiểm tra và xử lý chude
+        let chudeArray = req.body.chude;
+        if (typeof chudeArray === 'string') {
+            // Nếu chude là chuỗi, tách ra thành mảng
+            chudeArray = chudeArray.split(',').map(item => item.trim());
+        } else if (!Array.isArray(chudeArray)) {
+            // Nếu không phải là mảng và không phải là chuỗi, đặt mảng rỗng
+            chudeArray = [];
+        }
+
+        // Kiểm tra từng tên chủ đề
+        for (const chudeName of chudeArray) {
+            let chude = await ChuDe.findOne({ ten_CD: chudeName });
+
+            // Nếu chủ đề không tồn tại, tạo mới
+            if (!chude) {
+                chude = new ChuDe({ ten_CD: chudeName });
+                await chude.save();
+            }
+
+            // Thêm ID chủ đề vào mảng
+            chudeIds.push(chude._id);
+        }
         // Tạo mới công văn
         const congvan = new CongVan({
             ngaybanhanh: req.body.ngaybanhanh,
@@ -60,10 +64,10 @@ exports.createCongVan = async (req, res) => {
             noidung: req.body.noidung,
             nguoilienquan: req.body.nguoilienquan,
             sotrang: req.body.sotrang,
-            filecv: req.file ? req.file.path : null, // Lưu đường dẫn file nếu có file đính kèm
-            danhmuc: req.body.danhmuc,
-            chude: chudeArray, // Lưu danh sách chủ đề được chọn
-            khoa: req.body.khoa
+            filecv: req.file ? req.file.path : null,
+            chude: chudeIds, // Lưu mảng ID chủ đề
+            khoa: req.body.khoa,
+            loaicongvan: req.body.loaicongvan,
         });
 
         // Lưu công văn mới
@@ -79,8 +83,9 @@ exports.createCongVan = async (req, res) => {
 exports.getAllCongVan = async (req, res) => {
     try {
         const congvanList = await CongVan.find()
-            .populate('danhmuc', 'ten_DM') // Lấy tên danh mục
+            .populate('chude', 'ten_CD') // Lấy tên chủ đề
             .populate('khoa', 'ten_K')
+            .populate('loaicongvan', 'ten_LCV')
             .select('ngaybanhanh ngayhethieuluc sokihieu noidung nguoilienquan sotrang filecv chude');
         res.json(congvanList);
     } catch (error) {
@@ -92,9 +97,9 @@ exports.getAllCongVan = async (req, res) => {
 exports.getCongVanById = async (req, res) => {
     try {
         const congvan = await CongVan.findById(req.params.id)
-            .populate('danhmuc', 'ten_DM') // Lấy tên danh mục
+            .populate('chude', 'ten_CD') // Lấy tên chủ đề
             .populate('khoa', 'ten_K')
-            .select('ngaybanhanh ngayhethieuluc sokihieu noidung nguoilienquan sotrang filecv chude');
+            .populate('loaicongvan', 'ten_LCV');
         if (!congvan) return res.status(404).json({ message: 'Công văn không tồn tại' });
         res.json(congvan);
     } catch (error) {
@@ -105,47 +110,63 @@ exports.getCongVanById = async (req, res) => {
 // Cập nhật công văn theo ID
 exports.updateCongVan = async (req, res) => {
     try {
+        // Tìm công văn theo ID
         const congvan = await CongVan.findById(req.params.id);
         if (!congvan) return res.status(404).json({ message: 'Công văn không tồn tại' });
 
-
-        if (req.body.danhmuc) {
-            const danhMuc = await checkDanhMucExists(req.body.danhmuc);
-            if (!danhMuc) return res.status(404).json({ message: 'Danh mục không tồn tại' });
-
-            // Xử lý mảng chủ đề
-            let chudeArray;
-            console.log(req.body.chude); // In ra để kiểm tra
-            if (typeof req.body.chude === 'string') {
-                // Kiểm tra nếu là chuỗi
-                try {
-                    chudeArray = JSON.parse(req.body.chude); // Phân tích cú pháp chuỗi JSON
-                } catch (error) {
-                    return res.status(400).json({ message: 'Dữ liệu chủ đề không hợp lệ' });
-                }
-            } else if (Array.isArray(req.body.chude)) {
-                // Nếu đã là mảng
-                chudeArray = req.body.chude;
-            } else {
-                return res.status(400).json({ message: 'Dữ liệu chủ đề không hợp lệ' });
-            }
-
-            // Kiểm tra từng chủ đề có nằm trong danh mục không
-            const danhMucChuDeTenArray = danhMuc.chuDe.map(cd => cd.ten);
-            for (const chude of chudeArray) {
-                if (!danhMucChuDeTenArray.includes(chude)) {
-                    return res.status(400).json({ message: `Chủ đề "${chude}" không tồn tại trong danh mục này` });
-                }
-            }
-
-            congvan.danhmuc = req.body.danhmuc;
-            congvan.chude = chudeArray; // Cập nhật chủ đề
-        }
+        // Kiểm tra và cập nhật khoa
         if (req.body.khoa) {
-            const khoa = await Khoa.findById(req.body.khoa);
-            if (!khoa) return res.status(404).json({ message: 'Khoa không tồn tại' });
-            congvan.khoa = req.body.khoa; // Cập nhật khoa
+            await checkKhoaExists(req.body.khoa);
+            congvan.khoa = req.body.khoa;
         }
+
+        // Kiểm tra và xử lý chủ đề
+        let chudeArray = req.body.chude;
+        console.log("hello", chudeArray[0]);
+        // Nếu chude là một chuỗi có dấu phẩy, tách thành mảng
+        if (typeof chudeArray === 'string') {
+            // Tách chuỗi thành mảng nếu chứa dấu phẩy
+            if (chudeArray.includes(',')) {
+                chudeArray = chudeArray.split(',').map(item => item.trim());
+            } else {
+                // Nếu không có dấu phẩy, đặt vào mảng
+                chudeArray = [chudeArray.trim()];
+            }
+        } else if (!Array.isArray(chudeArray)) {
+            // Nếu không phải là mảng và không phải là chuỗi, đặt mảng rỗng
+            chudeArray = [];
+        }
+
+        // Xóa giá trị đầu tiên của mảng nếu có
+        if (chudeArray.length > 0) {
+            chudeArray.shift(); // Loại bỏ phần tử đầu tiên
+        }
+
+        let chudeIds = []; // Mảng lưu ID chủ đề
+
+        for (const chudeName of chudeArray) {
+            // Tìm chủ đề trong cơ sở dữ liệu
+            let chude = await ChuDe.findOne({ ten_CD: chudeName });
+
+            // Nếu chủ đề không tồn tại, tạo mới
+            if (!chude) {
+                chude = new ChuDe({ ten_CD: chudeName });
+                await chude.save();
+            }
+
+            // Thêm ID chủ đề vào mảng
+            chudeIds.push(chude._id);
+        }
+
+        // Cập nhật mảng ID chủ đề
+        congvan.chude = chudeIds;
+
+        // Kiểm tra và cập nhật loại công văn
+        if (req.body.loaicongvan) {
+            await checkLoaiCongVanExists(req.body.loaicongvan);
+            congvan.loaicongvan = req.body.loaicongvan;
+        }
+
         // Cập nhật các trường khác
         congvan.ngaybanhanh = req.body.ngaybanhanh || congvan.ngaybanhanh;
         congvan.ngayhethieuluc = req.body.ngayhethieuluc || congvan.ngayhethieuluc;
@@ -155,12 +176,16 @@ exports.updateCongVan = async (req, res) => {
         congvan.sotrang = req.body.sotrang || congvan.sotrang;
         congvan.filecv = req.file ? req.file.path : congvan.filecv;
 
+        // Lưu công văn đã cập nhật
         const updatedCongVan = await congvan.save();
         res.json(updatedCongVan);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 };
+
+
+
 
 // Xóa một công văn theo ID
 exports.deleteCongVan = async (req, res) => {
@@ -190,19 +215,34 @@ exports.thongkeCongvan = async (req, res) => {
             ngayhethieuluc: { $lt: new Date() },
         });
 
-        // Số công văn theo danh mục
-        const congvanTheoDanhmuc = await CongVan.aggregate([
-            { $group: { _id: '$danhmuc', soCongvan: { $sum: 1 } } },
+        // Số công văn theo khoa
+        const congvanTheoKhoa = await CongVan.aggregate([
+            { $group: { _id: '$khoa', soCongvan: { $sum: 1 } } },
             {
                 $lookup: {
-                    from: 'danhmucs',
+                    from: 'khoas',
                     localField: '_id',
                     foreignField: '_id',
-                    as: 'danhmuc',
+                    as: 'khoa',
                 },
             },
-            { $unwind: '$danhmuc' },
-            { $project: { ten_DM: '$danhmuc.ten_DM', soCongvan: 1 } },
+            { $unwind: '$khoa' },
+            { $project: { ten_K: '$khoa.ten_K', soCongvan: 1 } },
+        ]);
+
+        // Số công văn theo loại công văn
+        const congvanTheoLoai = await CongVan.aggregate([
+            { $group: { _id: '$loaicongvan', soCongvan: { $sum: 1 } } },
+            {
+                $lookup: {
+                    from: 'loaicongvans',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'loaicongvan',
+                },
+            },
+            { $unwind: '$loaicongvan' },
+            { $project: { ten_LCV: '$loaicongvan.ten_LCV', soCongvan: 1 } },
         ]);
 
         // Trả về dữ liệu thống kê
@@ -210,53 +250,11 @@ exports.thongkeCongvan = async (req, res) => {
             totalCongvan,
             congvanDangHieuluc,
             congvanHetHieuluc,
-            congvanTheoDanhmuc,
+            congvanTheoKhoa,
+            congvanTheoLoai,
         });
     } catch (error) {
         console.error('Lỗi khi lấy dữ liệu thống kê:', error);
         res.status(500).send('Lỗi server');
-    }
-};
-// Tìm kiếm công văn 
-exports.searchCongVanByKeyword = async (req, res) => {
-    try {
-        const keyword = decodeURIComponent(req.query.keyword || '');  
-
-        // Tìm danh mục có chủ đề chứa từ khóa trong tuKhoa
-        const danhMucList = await DanhMuc.find({
-            'chuDe.tuKhoa': { $regex: keyword, $options: 'i' } 
-        });
-
-        // Lấy tất cả các chủ đề có chứa từ khóa trong tuKhoa từ danh mục đã tìm được
-        const filteredChuDe = danhMucList.flatMap(danhmuc => 
-            danhmuc.chuDe.filter(cd => cd.tuKhoa.some(tk => new RegExp(keyword, 'i').test(tk)))
-        );
-
-        // Lấy danh sách các tên chủ đề đã lọc
-        const chuDeNames = filteredChuDe.map(cd => cd.ten);
-
-        // Tìm kiếm công văn không chỉ dựa trên chủ đề mà còn các trường khác
-        const congvanList = await CongVan.find({
-            $or: [
-                { chude: { $in: chuDeNames } },
-                { sokihieu: { $regex: keyword, $options: 'i' } },  
-                { noidung: { $regex: keyword, $options: 'i' } },  
-                { nguoilienquan: { $regex: keyword, $options: 'i' } },  
-                
-            ]
-        })
-        .populate('danhmuc', 'ten_DM')  
-        .populate('khoa', 'ten_K')
-        .select('ngaybanhanh ngayhethieuluc sokihieu noidung nguoilienquan sotrang filecv chude');
-
-        // Nếu không tìm thấy công văn nào phù hợp
-        if (congvanList.length === 0) {
-            return res.status(404).json({ message: 'Không tìm thấy công văn nào với từ khóa này' });
-        }
-
-        res.json(congvanList);
-    } catch (error) {
-        console.error('Lỗi khi tìm kiếm công văn:', error);
-        res.status(500).json({ message: error.message });
     }
 };

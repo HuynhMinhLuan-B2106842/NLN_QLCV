@@ -1,125 +1,107 @@
-// const DanhMuc = require('../models/danhmuc');
-
-// // Tạo mới danh mục
-// exports.createDanhMuc = async (req, res) => {
-//     try {
-//         const danhMuc = new DanhMuc({
-//             ten_DM: req.body.ten_DM,
-//             chuDe: req.body.chuDe || []
-//         });
-//         const newDanhMuc = await danhMuc.save();
-//         res.status(201).json(newDanhMuc);
-//     } catch (error) {
-//         res.status(400).json({ message: error.message });
-//     }
-// };
-// // Lấy tất cả danh mục
-// exports.getAllDanhMuc = async (req, res) => {
-//     try {
-//         const danhMucList = await DanhMuc.find();
-//         res.json(danhMucList);
-//     } catch (error) {
-//         res.status(500).json({ message: error.message });
-//     }
-// };
-// // Lấy một danh mục theo ID
-// exports.getDanhMucById = async (req, res) => {
-//     try {
-//         const danhMuc = await DanhMuc.findById(req.params.id);
-//         if (!danhMuc) return res.status(404).json({ message: 'Danh mục không tồn tại' });
-//         res.json(danhMuc);
-//     } catch (error) {
-//         res.status(500).json({ message: error.message });
-//     }
-// };
-// // Cập nhật một danh mục theo ID
-// exports.updateDanhMuc = async (req, res) => {
-//     try {
-//         const danhMuc = await DanhMuc.findById(req.params.id);
-//         if (!danhMuc) return res.status(404).json({ message: 'Danh mục không tồn tại' });
-
-//         danhMuc.ten_DM = req.body.ten_DM || danhMuc.ten_DM;
-//         danhMuc.chuDe = req.body.chuDe || danhMuc.chuDe;
-
-//         const updatedDanhMuc = await danhMuc.save();
-//         res.json(updatedDanhMuc);
-//     } catch (error) {
-//         res.status(400).json({ message: error.message });
-//     }
-// };
-// // Xóa một danh mục
-// exports.deleteDanhMuc = async (req, res) => {
-//     try {
-//         const danhMuc = await DanhMuc.findByIdAndDelete(req.params.id);
-//         if (!danhMuc) return res.status(404).json({ message: 'Danh mục không tồn tại' });
-
-//         //await danhMuc.remove();
-//         res.json({ message: 'Danh mục đã được xóa' });
-//     } catch (error) {
-//         res.status(500).json({ message: error.message });
-//     }
-// };
 const DanhMuc = require('../models/danhmuc');
 
-// Tạo mới danh mục
+
+const LoaiCongVan = require('../models/loaicongvan');
+const ChuDe = require('../models/chude');
+
+// Tạo danh mục mới với chủ đề hoặc loại công văn
 exports.createDanhMuc = async (req, res) => {
     try {
-        const danhMuc = new DanhMuc({
-            ten_DM: req.body.ten_DM,
-            chuDe: req.body.chuDe || []  // Nhận mảng chủ đề gồm tên và từ khóa
+        const { loaicongvanTen, chudeTen } = req.body;
+
+        let loaiCongVan = null;
+        let chuDe = null;
+
+        // Kiểm tra loại công văn
+        if (loaicongvanTen) {
+            loaiCongVan = await LoaiCongVan.findOne({ ten_LCV: loaicongvanTen });
+            if (!loaiCongVan) {
+                loaiCongVan = new LoaiCongVan({ ten_LCV: loaicongvanTen });
+                await loaiCongVan.save();
+            }
+        }
+
+        // Kiểm tra chủ đề
+        if (chudeTen) {
+            chuDe = await ChuDe.findOne({ ten_CD: chudeTen });
+            if (!chuDe) {
+                chuDe = new ChuDe({ ten_CD: chudeTen });
+                await chuDe.save();
+            }
+        }
+
+        // Tạo danh mục mới với trường có giá trị
+        const danhmuc = new DanhMuc({
+            loaicongvan: loaiCongVan ? loaiCongVan._id : undefined, // Không cần nhập trường này nếu không có giá trị
+            chude: chuDe ? chuDe._id : undefined // Không cần nhập trường này nếu không có giá trị
         });
-        const newDanhMuc = await danhMuc.save();
-        res.status(201).json(newDanhMuc);
+
+        await danhmuc.save();
+        res.status(201).json(danhmuc);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error("Chi tiết lỗi:", error);
+        res.status(500).json({ message: "Lỗi khi tạo danh mục", error: error.message || error });
     }
 };
+
 
 // Lấy tất cả danh mục
 exports.getAllDanhMuc = async (req, res) => {
     try {
-        const danhMucList = await DanhMuc.find();
-        res.json(danhMucList);
+        const danhmucs = await DanhMuc.find().populate('loaicongvan').populate('chude');
+        res.status(200).json(danhmucs);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: "Lỗi khi lấy danh sách danh mục", error });
     }
 };
 
-// Lấy một danh mục theo ID
+// Lấy danh mục theo ID
 exports.getDanhMucById = async (req, res) => {
     try {
-        const danhMuc = await DanhMuc.findById(req.params.id);
-        if (!danhMuc) return res.status(404).json({ message: 'Danh mục không tồn tại' });
-        res.json(danhMuc);
+        const danhmuc = await DanhMuc.findById(req.params.id).populate('loaicongvan').populate('chude');
+
+        if (!danhmuc) {
+            return res.status(404).json({ message: "Không tìm thấy danh mục" });
+        }
+
+        res.status(200).json(danhmuc);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: "Lỗi khi lấy danh mục", error });
     }
 };
 
-// Cập nhật một danh mục theo ID
+// Cập nhật danh mục theo ID
 exports.updateDanhMuc = async (req, res) => {
     try {
-        const danhMuc = await DanhMuc.findById(req.params.id);
-        if (!danhMuc) return res.status(404).json({ message: 'Danh mục không tồn tại' });
+        const { loaicongvan, chude } = req.body;
 
-        danhMuc.ten_DM = req.body.ten_DM || danhMuc.ten_DM;
-        danhMuc.chuDe = req.body.chuDe || danhMuc.chuDe;  // Cập nhật chủ đề và từ khóa cho từng chủ đề
+        const danhmuc = await DanhMuc.findByIdAndUpdate(
+            req.params.id,
+            { loaicongvan, chude },
+            { new: true }
+        ).populate('loaicongvan').populate('chude');
 
-        const updatedDanhMuc = await danhMuc.save();
-        res.json(updatedDanhMuc);
+        if (!danhmuc) {
+            return res.status(404).json({ message: "Không tìm thấy danh mục" });
+        }
+
+        res.status(200).json(danhmuc);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(500).json({ message: "Lỗi khi cập nhật danh mục", error });
     }
 };
 
-// Xóa một danh mục
+// Xóa danh mục theo ID
 exports.deleteDanhMuc = async (req, res) => {
     try {
-        const danhMuc = await DanhMuc.findByIdAndDelete(req.params.id);
-        if (!danhMuc) return res.status(404).json({ message: 'Danh mục không tồn tại' });
+        const danhmuc = await DanhMuc.findByIdAndDelete(req.params.id);
 
-        res.json({ message: 'Danh mục đã được xóa' });
+        if (!danhmuc) {
+            return res.status(404).json({ message: "Không tìm thấy danh mục" });
+        }
+
+        res.status(200).json({ message: "Xóa danh mục thành công" });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: "Lỗi khi xóa danh mục", error });
     }
 };

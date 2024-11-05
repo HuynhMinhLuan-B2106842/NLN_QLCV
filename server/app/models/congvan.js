@@ -30,25 +30,19 @@ const congvanSchema = new mongoose.Schema({
         type: String,
         required: false,
     },
-    danhmuc: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'danhmuc',  // Tham chiếu đến model danhmuc
-        required: true
-    },
     chude: [{
-        type: String,
-        required: true
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'chude',  
     }],
+
     khoa: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'khoa',  // Tham chiếu đến model danhmuc
-        required: true
     },
-    // loaicongvan: {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: 'loaicongvan',  // Tham chiếu đến model loaicongvan
-    //     required: true
-    // }
+    loaicongvan: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'loaicongvan',  // Tham chiếu đến model loaicongvan
+    }
 })
 const congvan = mongoose.model('congvan', congvanSchema)
 module.exports = congvan

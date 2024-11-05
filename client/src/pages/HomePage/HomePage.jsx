@@ -1,35 +1,14 @@
-
-// import React, { useEffect } from 'react';
-// import { useLocation } from 'react-router-dom';
-
-// const HomePage = ({ setBreadcrumb }) => {
-//   const location = useLocation();
-
-//   useEffect(() => {
-//     if (location.pathname === '/') {
-//       setBreadcrumb('Trang chủ');  // Cập nhật breadcrumb khi vào trang /Congvan
-//     }
-//   }, [location, setBreadcrumb]);
-
-//   return (
-//     <div>
-//       <h1>Đây là trang chủ</h1>
-//       {/* Nội dung khác của trang Công văn */}
-//     </div>
-//   );
-// };
-
-// export default HomePage;
-import React, { useEffect, useState } from 'react';
-import { Card, Row, Col, Statistic } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Row, Col, Card, Statistic } from 'antd';
 import axios from 'axios';
 
 const TrangChuThongKePage = () => {
   const [statistics, setStatistics] = useState({
     totalCongvan: 0,
-    congvanTheoDanhmuc: [],
     congvanDangHieuluc: 0,
     congvanHetHieuluc: 0,
+    congvanTheoKhoa: [],
+    congvanTheoLoai: [],
   });
 
   useEffect(() => {
@@ -76,11 +55,24 @@ const TrangChuThongKePage = () => {
       </Row>
 
       <Row gutter={16} style={{ marginTop: '16px' }}>
-        {statistics.congvanTheoDanhmuc.map((item, index) => (
+        {statistics.congvanTheoKhoa.map((item, index) => (
           <Col span={8} key={index}>
             <Card>
               <Statistic
-                title={`Công văn thuộc danh mục: ${item.ten_DM}`}
+                title={`Công văn thuộc khoa: ${item.ten_K}`}
+                value={item.soCongvan}
+              />
+            </Card>
+          </Col>
+        ))}
+      </Row>
+
+      <Row gutter={16} style={{ marginTop: '16px' }}>
+        {statistics.congvanTheoLoai.map((item, index) => (
+          <Col span={8} key={index}>
+            <Card>
+              <Statistic
+                title={`Công văn thuộc loại: ${item.ten_LCV}`}
                 value={item.soCongvan}
               />
             </Card>

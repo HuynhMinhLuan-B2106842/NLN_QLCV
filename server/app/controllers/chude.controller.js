@@ -3,8 +3,15 @@ const Chude = require('../models/chude');
 // Tạo mới chủ đề
 exports.createChude = async (req, res) => {
     try {
+        const ten_CD = req.body.ten_CD;
+
+        // Kiểm tra xem tên chủ đề có chứa dấu phẩy hay không
+        if (ten_CD.includes(',')) {
+            return res.status(400).json({ message: 'Tên chủ đề không được chứa dấu phẩy.' });
+        }
+
         const chude = new Chude({
-            ten_CD: req.body.ten_CD
+            ten_CD: ten_CD
         });
 
         const newChude = await chude.save();
@@ -13,6 +20,7 @@ exports.createChude = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
+
 // Lấy tất cả chủ đề
 exports.getAllChude = async (req, res) => {
     try {

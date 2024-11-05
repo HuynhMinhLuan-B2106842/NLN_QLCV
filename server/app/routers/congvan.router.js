@@ -28,7 +28,7 @@ router.get('/:id', congvanController.getCongVanById);
 router.delete('/:id', congvanController.deleteCongVan);
 router.get('/thongke/thongke', congvanController.thongkeCongvan);
 // Route để tìm kiếm công văn theo từ khóa
-router.get('/search/search', congvanController.searchCongVanByKeyword);
+//router.get('/search/search', congvanController.searchCongVanByKeyword);
 module.exports = router;
 // const upload = multer({ dest: 'uploads/' }); // Cấu hình multer
 
