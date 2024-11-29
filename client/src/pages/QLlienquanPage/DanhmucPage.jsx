@@ -3,7 +3,7 @@ import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Modal, Input, Button } from 'antd';
 import { useLocation } from 'react-router-dom';
-
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 const QLDanhMucPage = ({ setBreadcrumb }) => {
     const location = useLocation();
     const [categories, setCategories] = useState([]);
@@ -147,11 +147,11 @@ const QLDanhMucPage = ({ setBreadcrumb }) => {
                         <tr key={category._id}>
                             <td>{category.ten_LCV}</td>
                             <td>
-                                <Button type="primary" onClick={() => showEditCategoryModal(category)}>
-                                    Chỉnh Sửa
+                                <Button type="danger" onClick={() => showEditCategoryModal(category)}>
+                                <EditOutlined />
                                 </Button>
                                 <Button type="danger" onClick={() => handleDeleteCategory(category._id)}>
-                                    Xóa
+                                <DeleteOutlined />
                                 </Button>
                             </td>
                         </tr>
@@ -190,7 +190,7 @@ const QLDanhMucPage = ({ setBreadcrumb }) => {
             <table className='table'>
                 <thead>
                     <tr>
-                        <th scope='col'>Chủ đề</th>
+                        <th scope='col'>Từ khóa chủ đề</th>
                         <th scope='col'>Hành động</th>
                     </tr>
                 </thead>
@@ -199,11 +199,11 @@ const QLDanhMucPage = ({ setBreadcrumb }) => {
                         <tr key={topic._id}>
                             <td>{topic.ten_CD}</td>
                             <td>
-                                <Button type="primary" onClick={() => showEditTopicModal(topic)}>
-                                    Chỉnh Sửa
+                                <Button type="danger" onClick={() => showEditTopicModal(topic)}>
+                                <EditOutlined />
                                 </Button>
                                 <Button type="danger" onClick={() => handleDeleteTopic(topic._id)}>
-                                    Xóa
+                                <DeleteOutlined />
                                 </Button>
                             </td>
                         </tr>
@@ -212,7 +212,7 @@ const QLDanhMucPage = ({ setBreadcrumb }) => {
             </table>
 
             <Modal
-                title='Chỉnh sửa chủ đề'
+                title='Chỉnh sửa từ khóa chủ đề'
                 visible={isTopicModalVisible}
                 onOk={handleUpdateTopic}
                 onCancel={() => setIsTopicModalVisible(false)}
@@ -220,7 +220,7 @@ const QLDanhMucPage = ({ setBreadcrumb }) => {
                 cancelText='Hủy'
             >
                 <Input
-                    placeholder='Nhập tên chủ đề'
+                    placeholder='Nhập tên từ khóa chủ đề'
                     value={editingTopicName}
                     onChange={(e) => setEditingTopicName(e.target.value)}
                     className='mb-2'

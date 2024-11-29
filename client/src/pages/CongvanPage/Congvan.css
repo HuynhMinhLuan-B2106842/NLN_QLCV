@@ -1,0 +1,126 @@
+.container {
+    margin: 20px;
+  }
+  
+  input {
+    font-size: 14px; /* Kích thước chữ cho ô input */
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .ant-table th, .ant-table td {
+    white-space: nowrap; /* Đảm bảo văn bản không bị xuống dòng */
+    text-overflow: ellipsis;
+    overflow: hidden;
+    padding: 8px; /* Giảm padding giữa các cột */
+    font-size: 12px; /* Kích thước chữ cho các ô trong bảng */
+  }
+  
+  .ant-table-tbody > tr > td {
+    vertical-align: middle; /* Căn chỉnh văn bản theo chiều dọc */
+  }
+  
+  .ant-modal-body {
+    padding: 15px;
+    font-size: 14px; /* Kích thước chữ cho nội dung trong modal */
+  }
+  
+  .ant-modal-title {
+    font-size: 16px; /* Kích thước chữ tiêu đề modal */
+  }
+  
+  .ant-table-title {
+    font-size: 14px; /* Kích thước chữ tiêu đề cột trong bảng */
+  }
+  
+  .ant-dropdown-menu-item {
+    font-size: 14px; /* Kích thước chữ cho các mục trong menu dropdown */
+  }
+  
+  .ant-input {
+    font-size: 14px; /* Kích thước chữ cho ô nhập liệu */
+  }
+  
+  .ant-btn {
+    font-size: 12px; /* Kích thước chữ cho các nút bấm */
+  }
+  
+  /* Giới hạn độ rộng cột */
+  .ant-table th, .ant-table td {
+    max-width: 150px; /* Giới hạn độ rộng tối đa của các cột */
+    overflow: hidden; /* Ẩn phần văn bản thừa */
+    text-overflow: ellipsis; /* Hiển thị dấu chấm ba khi văn bản tràn */
+  }
+  
+  /* Đặt độ rộng cho các cột cụ thể nếu cần */
+  .ant-table-column-title {
+    font-size: 14px;
+    text-align: left;
+  }
+  
+  .ant-table th:nth-child(1), .ant-table td:nth-child(1) { 
+    width: 150px; /* Giới hạn độ rộng của cột "Loại công văn" */
+  }
+  
+  .ant-table th:nth-child(2), .ant-table td:nth-child(2) { 
+    width: 200px; /* Giới hạn độ rộng của cột "Chủ đề" */
+  }
+  
+  .ant-table th:nth-child(3), .ant-table td:nth-child(3) { 
+    width: 150px; /* Giới hạn độ rộng của cột "Ngày ban hành" */
+  }
+  
+  .ant-table th:nth-child(4), .ant-table td:nth-child(4) { 
+    width: 150px; /* Giới hạn độ rộng của cột "Ngày hết hiệu lực" */
+  }
+  
+  .ant-table th:nth-child(5), .ant-table td:nth-child(5) { 
+    width: 150px; /* Giới hạn độ rộng của cột "Số hiệu" */
+  }
+  
+  .ant-table th:nth-child(6), .ant-table td:nth-child(6) { 
+    width: 200px; /* Giới hạn độ rộng của cột "Nội dung" */
+  }
+  
+  .ant-table th:nth-child(7), .ant-table td:nth-child(7) { 
+    width: 150px; /* Giới hạn độ rộng của cột "Người liên quan" */
+  }
+  
+  .ant-table th:nth-child(8), .ant-table td:nth-child(8) { 
+    width: 150px; /* Giới hạn độ rộng của cột "Nơi liên quan" */
+  }
+  
+  .ant-table th:nth-child(9), .ant-table td:nth-child(9) { 
+    width: 100px; /* Giới hạn độ rộng của cột "Số trang" */
+  }
+  
+  .ant-table th:nth-child(10), .ant-table td:nth-child(10) { 
+    width: 150px; /* Giới hạn độ rộng của cột "Tập tin" */
+  }
+/* Giảm kích thước nút */
+.ant-btn {
+    font-size: 12px;  /* Giảm kích thước chữ trong nút */
+    padding: 6px 12px;  /* Giảm khoảng cách padding xung quanh chữ */
+    height: auto;  /* Đảm bảo nút không quá cao */
+    line-height: 1.2;  /* Điều chỉnh chiều cao dòng */
+  }
+  
+  /* Nếu bạn sử dụng nút với kiểu khác nhau như 'primary', 'danger' */
+  .ant-btn-primary, .ant-btn-danger {
+    font-size: 12px; /* Kích thước chữ nhỏ */
+    padding: 6px 12px; /* Giảm padding */
+  }
+  
+  /* Nếu bạn cần điều chỉnh kích thước của các nút trong dropdown */
+  .ant-dropdown-menu-item {
+    font-size: 12px;  /* Kích thước chữ cho các mục trong menu dropdown */
+    padding: 8px 12px; /* Giảm padding */
+  }
+  
+  /* Điều chỉnh cho các nút trong modal */
+  .ant-modal-footer .ant-btn {
+    font-size: 12px; /* Kích thước chữ nhỏ */
+    padding: 6px 12px; /* Giảm padding */
+  }
+  

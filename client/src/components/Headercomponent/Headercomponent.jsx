@@ -157,7 +157,7 @@ const HeaderComponent = ({ breadcrumb }) => {
   return (
     <>
       <Header style={{ padding: '20px', background: colorBgContainer, textAlign: 'center', fontSize: '24px' }}>
-        HỆ THỐNG QUẢN LÍ CÔNG VĂN
+        HỆ THỐNG QUẢN LÝ CÔNG VĂN
       </Header>
       <Breadcrumb style={{ margin: '16px 0', padding: '0 24px' }} items={breadcrumbItems} />
     </>

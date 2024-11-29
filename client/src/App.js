@@ -35,13 +35,13 @@ const App = () => {
       getItem('Công văn đi', '4', null, null, () => handleMenuClick('/Congvandi', 'Công văn đi')),
       getItem('Công văn nội bộ', '5', null, null, () => handleMenuClick('/Congvannoibo', 'Công văn nội bộ')),
     ]),
-    getItem('Quản lí liên quan', 'sub2', <UsergroupAddOutlined />, [
-      getItem('Quản lí khoa', '6', null, null, () => handleMenuClick('/QLkhoa', 'Quản lí khoa')),
-      getItem('Quản lí giảng viên', '7', null, null, () => handleMenuClick('/QLGiangvien', 'Quản lí giảng viên')),
-      getItem('Quản lí danh mục', '12', null, null, () => handleMenuClick('/QLdanhmuc', 'Quản lí danh mục')),
+    getItem('Quản lý liên quan', 'sub2', <UsergroupAddOutlined />, [
+      getItem('Quản lý khoa', '6', null, null, () => handleMenuClick('/QLkhoa', 'Quản lý khoa')),
+      // getItem('Quản lí giảng viên', '7', null, null, () => handleMenuClick('/QLGiangvien', 'Quản lí giảng viên')),
+      getItem('Quản lý danh mục', '12', null, null, () => handleMenuClick('/QLdanhmuc', 'Quản lý danh mục')),
     ]),
-    getItem('Quản Lí Công Văn', 'sub3', <FileAddOutlined />, [
-      getItem('Quản Lí Công văn', '9', null, null, () => handleMenuClick('/QLCongvan', 'Quản Lí Công văn')),
+    getItem('Quản lý công văn', 'sub3', <FileAddOutlined />, [
+      getItem('Quản lý công văn', '9', null, null, () => handleMenuClick('/QLCongvan', 'Quản lý công văn')),
     ]),
    // getItem('Files', '11', <FileOutlined />, null, () => handleMenuClick('/files', 'Files')),
   ];
@@ -52,10 +52,18 @@ const App = () => {
           collapsible
           collapsed={collapsed}
           onCollapse={(value) => setCollapsed(value)}
-          width={250}
+          width={230}
           style={{ position: 'fixed', height: '100vh', left: 0 }}
         >
-          <div className="demo-logo-vertical">
+          <div 
+            className="demo-logo-vertical"
+            onClick={() => {
+              navigate('/'); // Điều hướng về trang chủ
+              window.location.reload(); // Reload lại trang
+            }}
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: '16px' }}
+            
+          >
             <img src={logo} alt="Logo" style={{ height: '40px', width: 'auto' }} />
             {/* Hiển thị chữ chỉ khi Sider không collapse */}
             {!collapsed && <span className="logo-text">Công Văn</span>}
@@ -65,7 +73,7 @@ const App = () => {
         <Layout style={{ marginLeft: collapsed ? 80 : 250 }}>
           <HeaderComponent breadcrumb={breadcrumb} />
           <Content style={{ margin: '0 16px' }}>
-            <div className="content-background" style={{ padding: 24, minHeight: 360, borderRadius: '8px' }}>
+            <div className="content-background" style={{ padding: 0, minHeight: 360, borderRadius: '8px' }}>
               <RouterComponent setBreadcrumb={setBreadcrumb} />
             </div>
           </Content>

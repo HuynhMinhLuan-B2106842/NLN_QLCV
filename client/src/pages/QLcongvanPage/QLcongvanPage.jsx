@@ -13,7 +13,7 @@ import {
   Upload,
   DatePicker,
 } from 'antd';
-
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 const { Option } = Select;
 
 const QLCongvanPage = ({ setBreadcrumb }) => {
@@ -25,6 +25,7 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
   const [editingIndex, setEditingIndex] = useState(-1);
   const [editingUser, setEditingUser] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [fileName, setFileName] = useState('');
   const [newCongVan, setNewCongVan] = useState({
     ngaybanhanh: '',
     ngayhethieuluc: '',
@@ -38,11 +39,11 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
     loaicongvan: '',
   });
   const [newFile, setNewFile] = useState(null);
-  const [newChude, setNewChude] = useState(''); // State for the new topic input
+  //const [newChude, setNewChude] = useState(''); // State for the new topic input
 
   useEffect(() => {
     if (location.pathname === '/QLCongvan') {
-      setBreadcrumb('Quản lí công văn');
+      setBreadcrumb('Quản lý công văn');
     }
     fetchUsers();
     fetchDepartments();
@@ -85,6 +86,7 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
   };
 
   const handleSaveClick = () => {
+    setFileName('');
     const formData = new FormData();
     Object.keys(editingUser).forEach(key => {
       if (key === 'ngaybanhanh' || key === 'ngayhethieuluc') {
@@ -117,6 +119,8 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
     setEditingIndex(-1);
     setEditingUser(null);
     setNewFile(null);
+    setFileName('');
+    
   };
 
   const handleDeleteClick = (id) => {
@@ -137,22 +141,28 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
     setNewCongVan({ ...newCongVan, [field]: value });
   };
 
+  // const handleAddFileChange = (info) => {
+  //   if (info.file) {
+  //     setNewFile(info.file); // Lưu tệp tin vào state
+  //     setNewCongVan({ ...newCongVan, filecv: info.file }); // Gắn tệp tin vào trạng thái công văn
+  //   }
+  // }
   const handleAddFileChange = (file) => {
     setNewFile(file);
     setNewCongVan({ ...newCongVan, filecv: file });
+    setFileName(file.name);
     return false;
   };
-
-  const handleAddChude = (e) => {
-    if (e.key === 'Enter' && newChude.trim()) {
-      // Add the new topic to the chude array
-      setNewCongVan(prev => ({
-        ...prev,
-        chude: [...prev.chude, newChude.trim()]
-      }));
-      setNewChude(''); // Clear the input
-    }
-  };
+  // const handleAddChude = (e) => {
+  //   if (e.key === 'Enter' && newChude.trim()) {
+  //     // Add the new topic to the chude array
+  //     setNewCongVan(prev => ({
+  //       ...prev,
+  //       chude: [...prev.chude, newChude.trim()]
+  //     }));
+  //     setNewChude(''); // Clear the input
+  //   }
+  // };
 
   const handleAddSubmit = (values) => {
     const formData = new FormData();
@@ -194,7 +204,13 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
     {
       title: 'Chủ đề',
       dataIndex: 'chude',
-      render: (text, record) => record.chude ? record.chude.map(cd => cd.ten_CD).join(', ') : 'Không có', // Hiển thị nhiều chủ đề
+      render: (text, record) => record.chude ? (
+        <div>
+          {record.chude.map((cd, index) => (
+            <p key={index} style={{ margin: 0 }}>{cd.ten_CD}</p>
+          ))}
+        </div>
+      ) : 'Không có',
     },
     {
       title: 'Ngày ban hành',
@@ -215,7 +231,7 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
       dataIndex: 'noidung',
     },
     {
-      title: 'Người liên quan',
+      title: 'Người ký',
       dataIndex: 'nguoilienquan',
     },
     {
@@ -238,8 +254,8 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
       title: 'Hành động',
       render: (text, record, index) => (
         <div>
-          <Button type="primary" onClick={() => handleEditClick(index)}>Chỉnh sửa</Button>
-          <Button danger onClick={() => handleDeleteClick(record._id)}>Xóa</Button>
+          <Button onClick={() => handleEditClick(index)}><EditOutlined /></Button>
+          <Button danger onClick={() => handleDeleteClick(record._id)}><DeleteOutlined /></Button>
         </div>
       ),
     },
@@ -252,7 +268,10 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
         title="Thêm công văn"
         open={showAddForm}
         footer={null}
-        onCancel={() => setShowAddForm(false)}
+        onCancel={() => {setShowAddForm(false);
+          setFileName('');
+        }}
+        
       >
         <Form onFinish={handleAddSubmit}>
           <Form.Item label="Nơi liên quan" name="khoa" required>
@@ -302,7 +321,7 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
             <Input.TextArea onChange={(e) => handleAddInputChange(e.target.value, 'noidung')} required />
           </Form.Item>
 
-          <Form.Item label="Người liên quan" name="nguoilienquan" required>
+          <Form.Item label="Người ký" name="nguoilienquan" required>
             <Input onChange={(e) => handleAddInputChange(e.target.value, 'nguoilienquan')} required />
           </Form.Item>
 
@@ -317,20 +336,31 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
           <Form.Item label="Ngày hết hiệu lực" name="ngayhethieuluc" required>
             <DatePicker onChange={(date) => handleAddInputChange(date, 'ngayhethieuluc')} required />
           </Form.Item>
-
           <Form.Item label="Tập tin" name="filecv">
             <Upload beforeUpload={handleAddFileChange} showUploadList={false}>
               <Button>Chọn tập tin</Button>
+              {fileName && <p>{`Tập tin đã chọn: ${fileName}`}</p>}
             </Upload>
-          </Form.Item>
+          </Form.Item> 
+
 
           <Form.Item>
-            <Button type="primary" htmlType="submit">Thêm</Button>
+          <Button
+            type="primary"
+            htmlType="submit"
+            onClick={() => {
+              // Xử lý logic thêm ở đây
+              window.location.reload(); // Reload lại trang
+              
+            }}
+          >
+            Thêm
+          </Button>
           </Form.Item>
         </Form>
       </Modal>
 
-      <Table dataSource={users} columns={columns} rowKey="_id" />
+      <Table dataSource={users} columns={columns} rowKey="_id" pagination={false} />
       
       <Modal
         title="Chỉnh sửa công văn"
@@ -394,7 +424,7 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
           <Form.Item label="Nội dung" required>
             <Input.TextArea value={editingUser?.noidung} onChange={(e) => handleInputChange(e.target.value, 'noidung')} />
           </Form.Item>
-          <Form.Item label="Người liên quan" required>
+          <Form.Item label="Người ký" required>
             <Input value={editingUser?.nguoilienquan} onChange={(e) => handleInputChange(e.target.value, 'nguoilienquan')} />
           </Form.Item>
           <Form.Item label="Số trang" required>
@@ -404,6 +434,7 @@ const QLCongvanPage = ({ setBreadcrumb }) => {
             <Upload beforeUpload={handleAddFileChange} showUploadList={false}>
               <Button>Chọn tập tin</Button>
             </Upload>
+            {fileName && <p>{`Tập tin đã chọn: ${fileName}`}</p>}
           </Form.Item>
           <Form.Item>
             <Button type="primary" onClick={handleSaveClick}>Lưu</Button>

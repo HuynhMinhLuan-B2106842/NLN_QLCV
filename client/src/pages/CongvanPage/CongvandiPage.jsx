@@ -1,15 +1,18 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import { Table, Input } from 'antd';
+import { Table, Input, Modal, Dropdown, Menu } from 'antd';
+import { MoreOutlined } from '@ant-design/icons';
 
 const CongvandiPage = ({ setBreadcrumb }) => {
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedCongVan, setSelectedCongVan] = useState(null);
 
   useEffect(() => {
-    setBreadcrumb && setBreadcrumb('Quản lí công văn đi');
+    setBreadcrumb && setBreadcrumb('Công văn đi');
     fetchUsers();
   }, [setBreadcrumb]);
 
@@ -51,6 +54,16 @@ const CongvandiPage = ({ setBreadcrumb }) => {
     setFilteredUsers(filteredData);
   };
 
+  const handleViewDetails = (congVan) => {
+    setSelectedCongVan(congVan);
+    setIsModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
+    setSelectedCongVan(null);
+  };
+
   const columns = [
     {
       title: 'Loại công văn',
@@ -60,7 +73,13 @@ const CongvandiPage = ({ setBreadcrumb }) => {
     {
       title: 'Chủ đề',
       dataIndex: 'chude',
-      render: (text, record) => record.chude ? record.chude.map(cd => cd.ten_CD).join(', ') : 'Không có',
+      render: (text, record) => record.chude ? (
+        <div>
+          {record.chude.map((cd, index) => (
+            <p key={index} style={{ margin: 0 }}>{cd.ten_CD}</p>
+          ))}
+        </div>
+      ) : 'Không có',
     },
     {
       title: 'Ngày ban hành',
@@ -100,6 +119,23 @@ const CongvandiPage = ({ setBreadcrumb }) => {
         <a href={`http://localhost:5000/${text}`} target="_blank" rel="noopener noreferrer">Xem</a>
       ) : 'Không có',
     },
+    {
+      title: 'Thao tác',
+      render: (text, record) => (
+        <Dropdown
+          overlay={
+            <Menu>
+              <Menu.Item onClick={() => handleViewDetails(record)}>
+                Xem chi tiết
+              </Menu.Item>
+            </Menu>
+          }
+          trigger={['click']}
+        >
+          <MoreOutlined style={{ fontSize: '18px', cursor: 'pointer' }} />
+        </Dropdown>
+      ),
+    },
   ];
 
   return (
@@ -111,6 +147,32 @@ const CongvandiPage = ({ setBreadcrumb }) => {
         style={{ marginBottom: 16 }}
       />
       <Table dataSource={filteredUsers} columns={columns} rowKey="_id" />
+
+      <Modal
+        title="Chi tiết công văn"
+        visible={isModalVisible}
+        onCancel={handleCloseModal}
+        footer={null}
+      >
+        {selectedCongVan && (
+          <div>
+            <p><strong>Loại công văn:</strong> {selectedCongVan.loaicongvan?.ten_LCV || 'Không có'}</p>
+            <p><strong>Chủ đề:</strong> {selectedCongVan.chude ? selectedCongVan.chude.map(cd => cd.ten_CD).join(', ') : 'Không có'}</p>
+            <p><strong>Ngày ban hành:</strong> {formatDate(selectedCongVan.ngaybanhanh)}</p>
+            <p><strong>Ngày hết hiệu lực:</strong> {formatDate(selectedCongVan.ngayhethieuluc)}</p>
+            <p><strong>Số hiệu:</strong> {selectedCongVan.sokihieu}</p>
+            <p><strong>Nội dung:</strong> {selectedCongVan.noidung}</p>
+            <p><strong>Người liên quan:</strong> {selectedCongVan.nguoilienquan}</p>
+            <p><strong>Nơi liên quan:</strong> {selectedCongVan.khoa?.ten_K || 'Không có'}</p>
+            <p><strong>Số trang:</strong> {selectedCongVan.sotrang}</p>
+            <p><strong>Tập tin:</strong> {selectedCongVan.filecv ? (
+              <a href={`http://localhost:5000/${selectedCongVan.filecv}`} target="_blank" rel="noopener noreferrer">
+                {selectedCongVan.filecv.replace(/^uploads[\\/]/, '')}
+              </a>
+            ) : 'Không có'}</p>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
